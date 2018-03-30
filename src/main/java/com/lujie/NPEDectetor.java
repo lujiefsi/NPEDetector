@@ -63,7 +63,7 @@ public class NPEDectetor {
 	// if project is too large, we should use
 	// faster but not precise mainEntrypoints
 	private boolean mainEntrypoints = false;
-	private static long CUTOFF_SIZE = 10000000;
+	private static long CUTOFF_SIZE = 100000000;
 	private ClassHierarchy cha = null;
 	private Map<CGNode, Integer> checkedCalleeCount;
 	private Map<CGNode, CGNode> trasnCalleeToRootCallee;
@@ -80,6 +80,7 @@ public class NPEDectetor {
 		dectetor.checkJREVersion();
 		dectetor.checkParameter(args);
 		dectetor.makeCallGraph();
+		System.out.println("start to find potential NPE");
 		Collection<CGNode> returnNullNodes = dectetor.findAllReturnNullNode();
 		Map<CGNode, Set<CGNode>> calleeMap2Callers = dectetor
 				.findCallers(returnNullNodes);
@@ -202,12 +203,17 @@ public class NPEDectetor {
 				size += f.length();
 			}
 		}
+		StringBuilder message = new StringBuilder();
+		message.append("project size is ");
+		message.append(size);
+		message.append(" so use ");
 		if (size > CUTOFF_SIZE) {
-			System.out.println("use MainApplciationEntryPoint");
+			message.append("MainApplciationEntryPoint");
 			mainEntrypoints = true;
 		}else{
-			System.out.println("use AllApplciationEntryPoint");
+			message.append("AllApplciationEntryPoint");
 		}
+		System.out.println(message);
 		return composeString(result);
 	}
 
