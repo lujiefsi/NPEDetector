@@ -13,8 +13,8 @@ above figure shows the bug in hbase:
 4. After receive the request, RS will get master data from Zookeeper
 5.  Due to step 2, RS get null, and reference it w/o check it.
 
-We can see that this bug is complex(involed 4 node and one crash event)
-but in  fact, develop have considered the master crash situation while parse:
+We can see that this bug is complex(involed 4 node and one crash event).
+Actually, the developers have considered the master crash situation while parse:
 <pre><code>
 //callee: parse
 public Master parse(byte[] data){
@@ -24,7 +24,7 @@ public Master parse(byte[] data){
 }
 </code></pre>
 
-but in its caller developer does not take null into count:
+but in its caller developer does not take the null pointer into account:
 <pre><code>
 //caller getMasterInfoPort
 public getMasterInfoPort(byte[] data){
