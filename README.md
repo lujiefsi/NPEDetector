@@ -1,4 +1,6 @@
 # NPEDectetor
 NPEDectetor is designed to find the potential null pointer exception in the systems writen by java(especially for distributed system). 
 # Motivation
-![hbase-13546](https://github.com/lujiefsi/NPEDectetor/blob/master/hbase-13546.png =100x100)
+<div  align="center">    
+ <img src="https://github.com/lujiefsi/NPEDectetor/blob/master/hbase-13546.png" width = "300" height = "200" alt="hbase-13546" align=center />
+</div>
