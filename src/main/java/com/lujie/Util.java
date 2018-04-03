@@ -4,6 +4,7 @@ import com.ibm.wala.classLoader.IClass;
 import com.ibm.wala.ipa.callgraph.CGNode;
 import com.ibm.wala.ssa.SSAAbstractInvokeInstruction;
 import com.ibm.wala.ssa.SSAInstruction;
+import com.ibm.wala.ssa.SSAThrowInstruction;
 import com.ibm.wala.types.ClassLoaderReference;
 import com.ibm.wala.types.TypeName;
 
@@ -33,6 +34,9 @@ public class Util {
 							.getName().toString().equals("exit")) {
 				return true;
 			}
+		}
+		if (ssaInstruction instanceof SSAThrowInstruction){
+			return true;
 		}
 		return false;
 	}

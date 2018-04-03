@@ -478,13 +478,25 @@ public class NPEDectetor {
 		}
 	}
 
-	// need to handle if (x==null) exit;
 	private boolean controlByNENull(CGNode node, SSAInstruction ssaInstruction) {
+		/*debug point for check special method*/
+		if (node.toString().contains("CassandraStreamReader")
+				&& node.toString().contains("read")) {
+			System.out.print("");
+		}
 		IR ir = node.getIR();
 		PrunedCFG<SSAInstruction, ISSABasicBlock> exceptionPrunedCFG = ExitAndExceptionPrunedCFG
 				.make(ir.getControlFlowGraph());
-		ControlDependenceGraph<ISSABasicBlock> cdg = new ControlDependenceGraph<ISSABasicBlock>(
-				exceptionPrunedCFG);
+		ControlDependenceGraph<ISSABasicBlock> cdg = null;
+		try{
+			cdg = new ControlDependenceGraph<ISSABasicBlock>(exceptionPrunedCFG);
+		}catch(Throwable e){
+			System.err.println("errors happends while contructing cdg of " + 
+										Util.getSimpleMethodToString(node));
+		}
+		if (cdg == null){
+			return true;
+		}
 		ISSABasicBlock bb = ir.getBasicBlockForInstruction(ssaInstruction);
 		Set<ISSABasicBlock> preBBs = HashSetFactory.make();
 		findPreBB(cdg, preBBs, bb);
