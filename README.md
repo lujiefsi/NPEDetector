@@ -1,8 +1,8 @@
-# NPEDectetor
-NPEDectetor is designed to find the potential null pointer exception in the systems writen by java(especially for distributed system). 
+# NPEDetector
+NPEDetector is designed to find the potential null pointer exception in the systems writen by java(especially for distributed system). 
 # Motivation
 <div  align="center">    
- <img src="https://github.com/lujiefsi/NPEDectetor/blob/master/hbase-13546.png" width="60%" height="60%" alt="hbase-13546" align=center />
+ <img src="https://github.com/lujiefsi/NPEDetector/blob/master/hbase-13546.png" width="60%" height="60%" alt="hbase-13546" align=center />
 </div>
 
 above figure shows the bug in hbase:
@@ -34,7 +34,7 @@ public getMasterInfoPort(byte[] data){
 </code></pre>
 
 This bug shows that NPE happends in corner case but some (callee) developers are wake up this 
-case. So we develop NPEDectetor to catch this simpe bug pattern:<font color=red size=4>callee return null, but caller
+case. So we develop NPEDetector to catch this simpe bug pattern:<font color=red size=4>callee return null, but caller
 does not check it.</font>
 
 # Approach
@@ -56,5 +56,5 @@ In step5, we score each callee based on:(1) if some developerer have consider CN
 we think no CNC developeres are wrong(2)developer may borther massive [CNC](https://stackoverflow.com/questions/271526/avoiding-null-statements/271874#271874)
 # Usage
 1. We use maven build our project, so you can import it as existed maven project.
-2. vim the WALA  configuration file: ./NPEDectetor/src/main/resources/wala.properties, change the property to your jre1.7 path.
+2. vim the WALA  configuration file: ./NPEDetector/src/main/resources/wala.properties, change the property to your jre1.7 path.
 3. add two program arguments:(1)the absolute path of the jars that to be analyzed(2)output file path
