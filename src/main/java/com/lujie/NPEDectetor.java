@@ -233,8 +233,7 @@ public class NPEDectetor {
 			Properties p = WalaProperties.loadProperties();
 			String javaHome = p.getProperty(WalaProperties.J2SE_DIR);
 			if (!javaHome.contains("1.7")) {
-				System.err
-						.println("check your javahome wrong jdk version , must be 1.7");
+				Util.exitWithErrorMessage("check your javahome wrong jdk version , must be 1.7");
 			}
 		} catch (WalaException e) {
 			e.printStackTrace();

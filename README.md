@@ -54,3 +54,7 @@ Based on [WALA](https://github.com/wala/WALA),an famous static analysis framewor
     
 In step5, we score each callee based on:(1) if some developerer have consider CNC, but some are not,
 we think no CNC developeres are wrong(2)developer may borther massive [CNC](https://stackoverflow.com/questions/271526/avoiding-null-statements/271874#271874)
+# Usage
+1. We use maven build our project, so you can import it as existed maven project.
+2. vim the WALA  configuration file: ./NPEDectetor/src/main/resources/wala.properties, change the property to your jre1.7 path.
+3. add two program arguments:(1)the absolute path of the jars that to be analyzed(2)output file path
