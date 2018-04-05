@@ -16,6 +16,8 @@ import java.util.Set;
 import com.ibm.wala.cfg.cdg.ControlDependenceGraph;
 import com.ibm.wala.cfg.exc.intra.SSACFGNullPointerAnalysis;
 import com.ibm.wala.classLoader.CallSiteReference;
+import com.ibm.wala.classLoader.IClass;
+import com.ibm.wala.classLoader.IMethod;
 import com.ibm.wala.ipa.callgraph.AnalysisCacheImpl;
 import com.ibm.wala.ipa.callgraph.AnalysisOptions;
 import com.ibm.wala.ipa.callgraph.AnalysisScope;
@@ -26,6 +28,7 @@ import com.ibm.wala.ipa.callgraph.CallGraphBuilderCancelException;
 import com.ibm.wala.ipa.callgraph.CallGraphStats;
 import com.ibm.wala.ipa.callgraph.Entrypoint;
 import com.ibm.wala.ipa.callgraph.impl.AllApplicationEntrypoints;
+import com.ibm.wala.ipa.callgraph.impl.DefaultEntrypoint;
 import com.ibm.wala.ipa.cfg.ExceptionPrunedCFG;
 import com.ibm.wala.ipa.cfg.PrunedCFG;
 import com.ibm.wala.ipa.cha.ClassHierarchy;
@@ -57,38 +60,51 @@ import com.sun.xml.internal.bind.v2.TODO;
 /**
  * 
  * */
-public class NPEDectetor {
+public class NPEDetector {
 	private String jarDir = null;
 	private CallGraph callGraph = null;
 	// if project is too large, we should use
 	// faster but not precise mainEntrypoints
 	private boolean mainEntrypoints = false;
+	private boolean debug = false;
 	private static long CUTOFF_SIZE = 100000000;
+	private boolean simpleAnalysis = true;
 	private ClassHierarchy cha = null;
-	private Map<CGNode, Integer> checkedCalleeCount;
 	private Map<CGNode, CGNode> trasnCalleeToRootCallee;
 
-	public NPEDectetor() {
-		this.checkedCalleeCount = HashMapFactory.make();
+	public NPEDetector() {
 		trasnCalleeToRootCallee = HashMapFactory.make();
 	}
 
 	public static void main(String[] args) throws IOException,
 			ClassHierarchyException, IllegalArgumentException,
 			CallGraphBuilderCancelException {
-		NPEDectetor dectetor = new NPEDectetor();
-		dectetor.checkJREVersion();
-		dectetor.checkParameter(args);
+		NPEDetector dectetor = new NPEDetector();
+		dectetor.checkParameter();
 		dectetor.makeCallGraph();
 		System.out.println("start to find potential NPE");
 		Collection<CGNode> returnNullNodes = dectetor.findAllReturnNullNode();
 		Map<CGNode, Set<CGNode>> calleeMap2Callers = dectetor
 				.findCallers(returnNullNodes);
-		Map<Pair<CGNode, CGNode>, Set<Pair<CGNode, SSAInstruction>>> ssaMayReferenceNull = dectetor
-				.findSSAMayReferenceNull(calleeMap2Callers);
-		dectetor.filterByIfNENull(ssaMayReferenceNull);
-		Set<ScoreNode> scoreNodes = dectetor.buildScoreSet(ssaMayReferenceNull);
+		ControldependencyAnalysis controldependencyAnalysis = dectetor
+				.getControlDependencyAnalysis();
+
+		Map<CGNode, Set<CGNode>> noNEChekerCalleeMap2Callers = controldependencyAnalysis
+				.analysis(calleeMap2Callers);
+		Set<ScoreNode> scoreNodes = dectetor.buildScoreSet(
+				noNEChekerCalleeMap2Callers,
+				controldependencyAnalysis.getCheckedCalleeCount());
 		dectetor.dumpResult(args[1], scoreNodes);
+	}
+
+	private ControldependencyAnalysis getControlDependencyAnalysis() {
+		if (simpleAnalysis) {
+			return new SimpleControldependencyAnalysis(callGraph,
+					trasnCalleeToRootCallee);
+		} else {
+			return new ComplexControldependencyAnalysis(callGraph,
+					trasnCalleeToRootCallee);
+		}
 	}
 
 	private void dumpResult(String fileName, Set<ScoreNode> scoreNodes) {
@@ -122,23 +138,9 @@ public class NPEDectetor {
 	}
 
 	private Set<ScoreNode> buildScoreSet(
-			Map<Pair<CGNode, CGNode>, Set<Pair<CGNode, SSAInstruction>>> map) {
-		Iterator<Entry<Pair<CGNode, CGNode>, Set<Pair<CGNode, SSAInstruction>>>> entryIterator = map
-				.entrySet().iterator();
+			Map<CGNode, Set<CGNode>> calleeMap2Callers,
+			Map<CGNode, Integer> checkedCalleeCount) {
 		Set<ScoreNode> ret = new TreeSet<ScoreNode>();
-		Map<CGNode, Set<CGNode>> calleeMap2Callers = HashMapFactory.make();
-		while (entryIterator.hasNext()) {
-			Entry<Pair<CGNode, CGNode>, Set<Pair<CGNode, SSAInstruction>>> entry = entryIterator
-					.next();
-			CGNode caller = entry.getKey().fst;
-			CGNode callee = trasnCalleeToRootCallee.get(entry.getKey().snd);
-			Set<CGNode> callers = calleeMap2Callers.get(callee);
-			if (callers == null) {
-				callers = HashSetFactory.make();
-				calleeMap2Callers.put(callee, callers);
-			}
-			callers.add(caller);
-		}
 		for (Entry<CGNode, Set<CGNode>> entry : calleeMap2Callers.entrySet()) {
 			ScoreNode scoreNode = new ScoreNode();
 			scoreNode.node = entry.getKey();
@@ -153,14 +155,34 @@ public class NPEDectetor {
 		return ret;
 	}
 
-	private void checkParameter(String[] args) {
-		if (args.length != 2) {
-			System.out.println("wrong parameter number");
-			System.exit(1);
-		}
-		jarDir = args[0];
-		if (!(new File(jarDir).isDirectory())) {
-			System.out.println("wrong tart jar directory");
+	private void checkParameter() {
+		try {
+			
+			//check jre
+			Properties p = WalaProperties.loadProperties();
+			String javaHome = p.getProperty(WalaProperties.J2SE_DIR);
+			if (!javaHome.contains("1.7")) {
+				Util.exitWithErrorMessage("check your javahome wrong jdk version , must be 1.7");
+			}
+			//check jardir
+			jarDir = p.getProperty("jardir");
+			if (jarDir == null){
+				Util.exitWithErrorMessage("please configure your jardir");
+			}
+			//user may mistake leave a blank space end of the path  
+			jarDir.replaceAll(" ", "");
+			//check debug
+			String debugString = p.getProperty("debug");
+			if (debugString!=null&&debugString.equals("true")){
+				debug = true;
+			}
+			//check cda
+			String cda = p.getProperty("cda");
+			if (cda!=null &&cda.equals("complex")){
+				simpleAnalysis = false;
+			}
+		} catch (WalaException e) {
+			e.printStackTrace();
 			System.exit(1);
 		}
 	}
@@ -177,7 +199,9 @@ public class NPEDectetor {
 				jarFiles, exclusionsFile);
 		cha = ClassHierarchyFactory.make(scope);
 		Iterable<Entrypoint> entryPointIterator = null;
-		if (mainEntrypoints) {
+		if (debug) {
+			entryPointIterator = addSpecialEntryPoint();
+		} else if (mainEntrypoints) {
 			entryPointIterator = com.ibm.wala.ipa.callgraph.impl.Util
 					.makeMainEntrypoints(scope, cha);
 		} else {
@@ -210,10 +234,12 @@ public class NPEDectetor {
 		if (size > CUTOFF_SIZE) {
 			message.append("MainApplciationEntryPoint");
 			mainEntrypoints = true;
-		}else{
+		} else {
 			message.append("AllApplciationEntryPoint");
 		}
-		System.out.println(message);
+		if (!debug) {
+			System.out.println(message);
+		}
 		return composeString(result);
 	}
 
@@ -228,23 +254,10 @@ public class NPEDectetor {
 		return result.toString();
 	}
 
-	private void checkJREVersion() {
-		try {
-			Properties p = WalaProperties.loadProperties();
-			String javaHome = p.getProperty(WalaProperties.J2SE_DIR);
-			if (!javaHome.contains("1.7")) {
-				Util.exitWithErrorMessage("check your javahome wrong jdk version , must be 1.7");
-			}
-		} catch (WalaException e) {
-			e.printStackTrace();
-			System.exit(1);
-		}
-	}
-
 	private Collection<CGNode> findAllReturnNullNode() {
 		Set<CGNode> returnNullNodes = HashSetFactory.make();
 		for (CGNode node : callGraph) {
-			/*debug point for check special method*/
+			/* debug point for check special method */
 			if (node.toString().contains("BinaryInputArchive")
 					&& node.toString().contains("readBuffer")) {
 				System.out.print("");
@@ -341,7 +354,7 @@ public class NPEDectetor {
 			Collection<CGNode> returnNullNodes) {
 		Map<CGNode, Set<CGNode>> calleeMapCallers = HashMapFactory.make();
 		for (CGNode returnNullNode : returnNullNodes) {
-			/*debug point for check special method*/
+			/* debug point for check special method */
 			if (returnNullNode.toString().contains("BinaryInputArchive")
 					&& returnNullNode.toString().contains("readBuffer")) {
 				System.out.print("");
@@ -359,177 +372,20 @@ public class NPEDectetor {
 		return calleeMapCallers;
 	}
 
-	private Map<Pair<CGNode, CGNode>, Set<Pair<CGNode, SSAInstruction>>> findSSAMayReferenceNull(
-			Map<CGNode, Set<CGNode>> calleeMapCallers) {
-		Map<Pair<CGNode, CGNode>, Set<Pair<CGNode, SSAInstruction>>> result = HashMapFactory
-				.make();
-		for (Entry<CGNode, Set<CGNode>> entry : calleeMapCallers.entrySet()) {
-			CGNode callee = entry.getKey();
-			/*debug point for check special method*/
-			if (callee.toString().contains("BinaryInputArchive")
-					&& callee.toString().contains("readBuffer")) {
-				System.out.print("");
-			}
-			Set<CGNode> callers = entry.getValue();
-			for (Iterator<CGNode> callerIterator = callers.iterator(); callerIterator
-					.hasNext();) {
-				CGNode caller = callerIterator.next();
-				IR ir = caller.getIR();
-				Iterator<CallSiteReference> callSiteIterator = callGraph
-						.getPossibleSites(caller, callee);
-				Set<Pair<CGNode, SSAInstruction>> refernces = HashSetFactory
-						.make();
-				while (callSiteIterator.hasNext()) {
-					CallSiteReference callSiteReference = callSiteIterator
-							.next();
-					SSAAbstractInvokeInstruction[] ssaAbstractInvokeInstructions = ir
-							.getCalls(callSiteReference);
-					for (SSAAbstractInvokeInstruction ssaAbstractInvokeInstruction : ssaAbstractInvokeInstructions) {
-						int def = ssaAbstractInvokeInstruction.getDef();
-						if (def == -1) {
-							continue;
-						}
-						refernces.addAll(getFinalRefernces(def, caller));
-					}
-				}
-				if (refernces.size() == 0) {
-					callerIterator.remove();
-				} else {
-					result.put(Pair.make(caller, callee), refernces);
+	private Iterable<Entrypoint> addSpecialEntryPoint() {
+		final Set<Entrypoint> entrypoints = new HashSet<Entrypoint>();
+		for (IClass cls : cha) {
+			if (cls.getName().toString().endsWith("FsDatasetImpl")) {
+				for (IMethod method : cls.getAllMethods()) {
+					entrypoints.add(new DefaultEntrypoint(method, cha));
 				}
 			}
 		}
-		Iterator<Entry<CGNode, Set<CGNode>>> entryIterator = calleeMapCallers
-				.entrySet().iterator();
-		while (entryIterator.hasNext()) {
-			Entry<CGNode, Set<CGNode>> entry = entryIterator.next();
-			if (entry.getValue().size() == 0) {
-				entryIterator.remove();
-			}
-		}
-		return result;
-	}
+		return new Iterable<Entrypoint>() {
 
-	private Set<Pair<CGNode, SSAInstruction>> getFinalRefernces(int def,
-			CGNode node) {
-		Set<Pair<CGNode, SSAInstruction>> refernces = HashSetFactory.make();
-		// case 0:def.call()
-		DefUse du = node.getDU();
-		Iterator<SSAInstruction> usesIterator = du.getUses(def);
-		while (usesIterator.hasNext()) {
-			SSAInstruction useInstruction = usesIterator.next();
-			if (useInstruction instanceof SSAAbstractInvokeInstruction) {
-				if (!((SSAAbstractInvokeInstruction) useInstruction).isStatic()) {
-					// case0 : ret = methodReturnNull();ret.foo();
-					if (def == useInstruction.getUse(0)) {
-						refernces.add(Pair.make(node, useInstruction));
-					} else {
-						// TODO case1 : ret = methodReturnNull();this.foo(ret);
-					}
-				} else {
-					// TODO case2 : ret = methodReturnNull();staticfoo(ret);
-				}
-			} else if (useInstruction instanceof SSAFieldAccessInstruction) {
-				// case3 : ret = methodReturnNull();ret.a = 1;1==ret.a
-				if (def == useInstruction.getUse(0)) {
-					refernces.add(Pair.make(node, useInstruction));
-				} else {
-					// TODO case3 : ret = methodReturnNull();this.a = ret;
-				}
-			} else if (useInstruction instanceof SSAArrayLengthInstruction) {
-				// case3 : ret = methodReturnNull();ret.a = 1;1==ret.a
-				if (def == useInstruction.getUse(0)) {
-					refernces.add(Pair.make(node, useInstruction));
-				} else {
-					// TODO case3 : ret = methodReturnNull();this.a = ret;
-				}
-			} else {
-				// TODO: such as phi
+			public Iterator<Entrypoint> iterator() {
+				return entrypoints.iterator();
 			}
-		}
-		return refernces;
-	}
-
-	private void filterByIfNENull(
-			Map<Pair<CGNode, CGNode>, Set<Pair<CGNode, SSAInstruction>>> map) {
-		Iterator<Entry<Pair<CGNode, CGNode>, Set<Pair<CGNode, SSAInstruction>>>> entryIterator = map
-				.entrySet().iterator();
-		while (entryIterator.hasNext()) {
-			Entry<Pair<CGNode, CGNode>, Set<Pair<CGNode, SSAInstruction>>> entry = entryIterator
-					.next();
-			Iterator<Pair<CGNode, SSAInstruction>> pairIterator = entry
-					.getValue().iterator();
-			while (pairIterator.hasNext()) {
-				Pair<CGNode, SSAInstruction> pair = pairIterator.next();
-				if (controlByNENull(pair.fst, pair.snd)) {
-					pairIterator.remove();
-					Integer cnt = checkedCalleeCount.get(entry.getKey().snd);
-					if (cnt == null) {
-						cnt = new Integer(0);
-					}
-					cnt++;
-					checkedCalleeCount.put(entry.getKey().snd, cnt);
-				}
-			}
-			if (entry.getValue().size() == 0) {
-				entryIterator.remove();
-			}
-		}
-	}
-
-	private boolean controlByNENull(CGNode node, SSAInstruction ssaInstruction) {
-		/*debug point for check special method*/
-		if (node.toString().contains("CassandraStreamReader")
-				&& node.toString().contains("read")) {
-			System.out.print("");
-		}
-		IR ir = node.getIR();
-		PrunedCFG<SSAInstruction, ISSABasicBlock> exceptionPrunedCFG = ExitAndExceptionPrunedCFG
-				.make(ir.getControlFlowGraph());
-		ControlDependenceGraph<ISSABasicBlock> cdg = null;
-		try{
-			cdg = new ControlDependenceGraph<ISSABasicBlock>(exceptionPrunedCFG);
-		}catch(Throwable e){
-			System.err.println("errors happends while contructing cdg of " + 
-										Util.getSimpleMethodToString(node));
-		}
-		if (cdg == null){
-			return true;
-		}
-		ISSABasicBlock bb = ir.getBasicBlockForInstruction(ssaInstruction);
-		Set<ISSABasicBlock> preBBs = HashSetFactory.make();
-		findPreBB(cdg, preBBs, bb);
-		for (ISSABasicBlock preBB : preBBs) {
-			for (SSAInstruction controlSSAInstruction : preBB) {
-				if (controlSSAInstruction instanceof SSAConditionalBranchInstruction) {
-					if (controlSSAInstruction.getNumberOfUses() != 2) {
-						continue;
-					}
-					int use0 = controlSSAInstruction.getUse(0);
-					int use1 = controlSSAInstruction.getUse(1);
-					if (ir.getSymbolTable().isNullConstant(use0)
-							&& use1 == ssaInstruction.getUse(0)) {
-						return true;
-					}
-					if (ir.getSymbolTable().isNullConstant(use1)
-							&& use0 == ssaInstruction.getUse(0)) {
-						return true;
-					}
-				}
-			}
-		}
-		return false;
-	}
-
-	private void findPreBB(ControlDependenceGraph<ISSABasicBlock> cdg,
-			Set<ISSABasicBlock> preBBs, ISSABasicBlock bb) {
-		Iterator<ISSABasicBlock> preBBIterator = cdg.getPredNodes(bb);
-		while (preBBIterator.hasNext()) {
-			ISSABasicBlock preBB = preBBIterator.next();
-			if (preBBs.contains(preBB))
-				continue;
-			preBBs.add(preBB);
-			findPreBB(cdg, preBBs, preBB);
-		}
+		};
 	}
 }

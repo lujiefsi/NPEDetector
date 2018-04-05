@@ -39,22 +39,32 @@ does not check it.</font>
 
 # Approach
 Based on [WALA](https://github.com/wala/WALA),an famous static analysis framework.
-
+we have two analysis strategy, difference in step 4:
     step1 : find all return null method(RNM)
 
     step2 : find all RNM' caller;
 
     step3 : find all RNM return value's use instruction.
 
-    step4 : check all use instructions whether controled by check null condition(CNC)
+    step4 : simple: check if null checker exists in caller, without construct ControldependencyGraph
+	    complex:check all use instructions whether controled by check null condition(CNC)
 
     step5 : Score each callee:CNC numbers * 10 - caller number.
 
     step6 : Sort all callees and print.
-    
+Simple strategy may cause false negatives like:
+ <pre><code>
+    ret = foo();
+    if (ret != null) ret.foo1;
+    ret.field;//NPE, but do not report
+</code></pre>
+  
 In step5, we score each callee based on:(1) if some developerer have consider CNC, but some are not,
 we think no CNC developeres are wrong(2)developer may borther massive [CNC](https://stackoverflow.com/questions/271526/avoiding-null-statements/271874#271874)
 # Usage
 1. We use maven build our project, so you can import it as existed maven project.
-2. vim the WALA  configuration file: ./NPEDetector/src/main/resources/wala.properties, change the property to your jre1.7 path.
-3. add two program arguments:(1)the absolute path of the jars that to be analyzed(2)output file path
+2. vim the WALA  configuration file: ./NPEDetector/src/main/resources/wala.properties, you need to change:  
+   2.1 the property java_runtime_dir to your jre1.7 path.
+   2.2 set jardir as the jars path to be analyzed 
+   2.3 set outputfile as you want to dump result
+   2.4 set debug to false or true, this is for debug!
