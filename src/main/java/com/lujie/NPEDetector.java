@@ -362,8 +362,8 @@ public class NPEDetector {
 		Map<CGNode, Set<CGNode>> calleeMapCallers = HashMapFactory.make();
 		for (CGNode returnNullNode : returnNullNodes) {
 			/* debug point for check special method */
-			if (returnNullNode.toString().contains("BinaryInputArchive")
-					&& returnNullNode.toString().contains("readBuffer")) {
+			if (returnNullNode.toString().contains("SecurityUtils")
+					&& returnNullNode.toString().contains("createSaslClient")) {
 				System.out.print("");
 			}
 			Collection<Pair<CGNode, CGNode>> callerAndCallees = this

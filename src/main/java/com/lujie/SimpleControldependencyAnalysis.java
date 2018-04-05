@@ -30,8 +30,13 @@ public class SimpleControldependencyAnalysis extends ControldependencyAnalysis {
 			Map<CGNode, Set<CGNode>> calleeMap2Callers) {
 		HashMap<CGNode, Set<CGNode>> ret = new HashMap<CGNode, Set<CGNode>>();
 		for (Entry<CGNode, Set<CGNode>> entry : calleeMap2Callers.entrySet()) {
+			if (entry.getKey().toString().contains("SecurityUtils")
+					&& entry.getKey().toString().contains(
+							"createSaslClient")) {
+				System.out.print("");
+			}
 			for (CGNode caller : entry.getValue()) {
-				if (!refernces(caller, entry.getKey())){
+				if (!refernces(caller, entry.getKey())) {
 					continue;
 				}
 				if (!controlByNEChecker(caller, entry.getKey())) {
@@ -61,7 +66,7 @@ public class SimpleControldependencyAnalysis extends ControldependencyAnalysis {
 				if (def == -1) {
 					continue;
 				}
-				if (refernces(def,caller)){
+				if (refernces(def, caller)) {
 					return true;
 				}
 			}
