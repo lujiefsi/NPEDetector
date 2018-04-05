@@ -65,6 +65,9 @@ we think no CNC developeres are wrong(2)developer may borther massive [CNC](http
 1. We use maven build our project, so you can import it as existed maven project.
 2. vim the WALA  configuration file: ./NPEDetector/src/main/resources/wala.properties, you need to change:  
    2.1 the property java_runtime_dir to your jre1.7 path.
+
    2.2 set jardir as the jars path to be analyzed 
+
    2.3 set outputfile as you want to dump result
+
    2.4 set debug to false or true, this is for debug!
