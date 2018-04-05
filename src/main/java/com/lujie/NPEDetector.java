@@ -69,6 +69,7 @@ public class NPEDetector {
 	private boolean debug = false;
 	private static long CUTOFF_SIZE = 100000000;
 	private boolean simpleAnalysis = true;
+	private String outputFile = null;
 	private ClassHierarchy cha = null;
 	private Map<CGNode, CGNode> trasnCalleeToRootCallee;
 
@@ -94,7 +95,7 @@ public class NPEDetector {
 		Set<ScoreNode> scoreNodes = dectetor.buildScoreSet(
 				noNEChekerCalleeMap2Callers,
 				controldependencyAnalysis.getCheckedCalleeCount());
-		dectetor.dumpResult(args[1], scoreNodes);
+		dectetor.dumpResult(scoreNodes);
 	}
 
 	private ControldependencyAnalysis getControlDependencyAnalysis() {
@@ -107,8 +108,8 @@ public class NPEDetector {
 		}
 	}
 
-	private void dumpResult(String fileName, Set<ScoreNode> scoreNodes) {
-		File file = new File(fileName);
+	private void dumpResult(Set<ScoreNode> scoreNodes) {
+		File file = new File(outputFile);
 		FileWriter writer = null;
 		try {
 			writer = new FileWriter(file);
@@ -157,28 +158,34 @@ public class NPEDetector {
 
 	private void checkParameter() {
 		try {
-			
-			//check jre
+
+			// check jre
 			Properties p = WalaProperties.loadProperties();
 			String javaHome = p.getProperty(WalaProperties.J2SE_DIR);
 			if (!javaHome.contains("1.7")) {
 				Util.exitWithErrorMessage("check your javahome wrong jdk version , must be 1.7");
 			}
-			//check jardir
+			// check jardir
 			jarDir = p.getProperty("jardir");
-			if (jarDir == null){
+			if (jarDir == null) {
 				Util.exitWithErrorMessage("please configure your jardir");
 			}
-			//user may mistake leave a blank space end of the path  
+			// user may mistake leave a blank space end of the path
 			jarDir.replaceAll(" ", "");
-			//check debug
+			
+			outputFile = p.getProperty("outputfile");
+			if (outputFile == null) {
+				Util.exitWithErrorMessage("please configure your outputfile");
+			}
+			outputFile.replaceAll(" ", "");
+			// check debug
 			String debugString = p.getProperty("debug");
-			if (debugString!=null&&debugString.equals("true")){
+			if (debugString != null && debugString.equals("true")) {
 				debug = true;
 			}
-			//check cda
+			// check cda
 			String cda = p.getProperty("cda");
-			if (cda!=null &&cda.equals("complex")){
+			if (cda != null && cda.equals("complex")) {
 				simpleAnalysis = false;
 			}
 		} catch (WalaException e) {
