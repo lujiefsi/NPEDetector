@@ -38,7 +38,7 @@ case. So we develop NPEDetector to catch this simpe bug pattern:<font color=red 
 does not check it.</font>
 
 # Approach
-NPEDetector is Based on an famous static analysis framework [WALA](https://github.com/wala/WALA).
+NPEDetector is based on an famous static analysis framework [WALA](https://github.com/wala/WALA).
 we have two analysis strategy, difference in step 4:
     step1 : find all return null method(RNM)
 
