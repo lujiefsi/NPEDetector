@@ -63,8 +63,7 @@ Simple strategy may cause false negatives like:
 In step5, we score each callee based on:
 
     (1) if some developer have consider CNC, but some are not, we think no CNC developeres are wrong
-    
-    (2) developer may botherwith those massive [CNC](https://stackoverflow.com/questions/271526/avoiding-null-statements/271874#271874)
+    (2) developer may bother with those massive [CNC](https://stackoverflow.com/questions/271526/avoiding-null-statements/271874#271874)
     
 # Usage
 1. We use maven build our project, so you can import it as existed maven project.
