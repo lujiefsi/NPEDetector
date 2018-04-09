@@ -39,7 +39,7 @@ does not check it.</font>
 
 # Approach
 NPEDetector is based on an famous static analysis framework [WALA](https://github.com/wala/WALA).
-We design two analysis strategy, difference in step 4:
+We design two analysis strategies, difference in step 4:
 
     step1 : find all return null method(RNM)
 
@@ -60,8 +60,12 @@ Simple strategy may cause false negatives like:
     ret.field;//NPE, but should not be reported
 </code></pre>
   
-In step5, we score each callee based on:(1) if some developer have consider CNC, but some are not,
-we think no CNC developeres are wrong(2)developer may borther massive [CNC](https://stackoverflow.com/questions/271526/avoiding-null-statements/271874#271874)
+In step5, we score each callee based on:
+
+    (1) if some developer have consider CNC, but some are not, we think no CNC developeres are wrong
+    
+    (2) developer may botherwith those massive [CNC](https://stackoverflow.com/questions/271526/avoiding-null-statements/271874#271874)
+    
 # Usage
 1. We use maven build our project, so you can import it as existed maven project.
 2. vim the WALA  configuration file: ./NPEDetector/src/main/resources/wala.properties, you need to change:  
