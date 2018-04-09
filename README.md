@@ -40,6 +40,7 @@ does not check it.</font>
 # Approach
 NPEDetector is based on an famous static analysis framework [WALA](https://github.com/wala/WALA).
 We design two analysis strategy, difference in step 4:
+
     step1 : find all return null method(RNM)
 
     step2 : find all RNM' caller;
