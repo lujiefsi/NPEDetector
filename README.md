@@ -5,7 +5,7 @@ NPEDetector is designed to find the potential null pointer exception in the syst
 ## Found and confirmed bugs
    [ZK-3007](https://issues.apache.org/jira/browse/ZOOKEEPER-3007)
    [ZK-3008](https://issues.apache.org/jira/browse/ZOOKEEPER-3008)
-## Discuss with other developer
+## Discussion
    [ZK-3009](https://issues.apache.org/jira/browse/ZOOKEEPER-3009)
 # Motivation
 <div  align="center">    
