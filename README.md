@@ -48,7 +48,7 @@ We apply two analysis strategies in NPEDetector, difference in step 4:
     step3 : find all RNM return value's use instruction.
 
     step4 : simple: check if null checker exists in caller, without construct ControldependencyGraph
-	    complex:check all use instructions whether controled by check null condition(CNC)
+	        complex:check all use instructions whether controled by check null condition(CNC)
 
     step5 : Score each callee:CNC numbers * 10 - caller number.
 
@@ -57,7 +57,7 @@ Simple strategy may cause false negatives like:
  <pre><code>
     ret = foo();
     if (ret != null) ret.foo1;
-    ret.field;//NPE, but should not be reported
+    ret.field;//NPE, but our tool won't not reporte it.
 </code></pre>
   
 In step5, we score each callee based on:
@@ -67,10 +67,10 @@ In step5, we score each callee based on:
 # Usage
 1. We use maven build our project, so you can import it as existed maven project.
 2. vim the WALA  configuration file: ./NPEDetector/src/main/resources/wala.properties, you need to change:  
-   2.1 the property java_runtime_dir to your jre1.7 path.
+   2.1 the property *java_runtime_dir* to your jre1.7 path.
 
-   2.2 set jardir as the jars path to be analyzed 
+   2.2 set *jardir* as the jars path to be analyzed 
 
-   2.3 set outputfile as you want to dump result
+   2.3 set *outputfile* as you want to dump result
 
-   2.4 set debug to false or true, this is for debug!
+   2.4 set *debug* to false or true, this is for debug!
