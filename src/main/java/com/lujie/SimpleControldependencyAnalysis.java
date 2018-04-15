@@ -13,6 +13,8 @@ import com.ibm.wala.ipa.callgraph.CallGraph;
 import com.ibm.wala.ssa.DefUse;
 import com.ibm.wala.ssa.SSAAbstractInvokeInstruction;
 import com.ibm.wala.ssa.SSAArrayLengthInstruction;
+import com.ibm.wala.ssa.SSACheckCastInstruction;
+import com.ibm.wala.ssa.SSAConversionInstruction;
 import com.ibm.wala.ssa.SSAFieldAccessInstruction;
 import com.ibm.wala.ssa.SSAInstruction;
 import com.ibm.wala.util.collections.HashSetFactory;
@@ -136,7 +138,10 @@ public class SimpleControldependencyAnalysis extends ControldependencyAnalysis {
 				} else {
 					// TODO case3 : ret = methodReturnNull();this.a = ret;
 				}
-			} else {
+			} else if (useInstruction instanceof SSACheckCastInstruction){
+				return refernces(useInstruction.getDef(),node);
+			}
+			else {
 				// TODO: such as phi
 			}
 		}

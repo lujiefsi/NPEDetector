@@ -70,6 +70,7 @@ public class NPEDetector {
 	private static long CUTOFF_SIZE = 100000000;
 	private boolean simpleAnalysis = true;
 	private String outputFile = null;
+	private int weight = 3;
 	private ClassHierarchy cha = null;
 	private Map<CGNode, CGNode> trasnCalleeToRootCallee;
 
@@ -149,7 +150,7 @@ public class NPEDetector {
 			scoreNode.score -= entry.getValue().size();
 			Integer score = checkedCalleeCount.get(entry.getKey());
 			if (score != null) {
-				scoreNode.score += score * 10;
+				scoreNode.score += score * weight;
 			}
 			ret.add(scoreNode);
 		}
@@ -187,6 +188,14 @@ public class NPEDetector {
 			String cda = p.getProperty("cda");
 			if (cda != null && cda.equals("complex")) {
 				simpleAnalysis = false;
+			}
+			String weightString = p.getProperty("weight");
+			if (weightString != null){
+				try{
+					this.weight = Integer.valueOf(weightString);
+				} catch(Throwable e) {
+					System.out.println(e);
+				}
 			}
 		} catch (WalaException e) {
 			e.printStackTrace();
