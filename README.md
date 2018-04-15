@@ -75,10 +75,10 @@ In step5, we score each callee based on:
 1. We use maven build our project, so you can import it as existed maven project.
 2. vim the WALA  configuration file: ./NPEDetector/src/main/resources/wala.properties, you need to change:  
 
-&#8195 2.1 the property *java_runtime_dir* to your jre1.7 path.
+> 2.1 the property *java_runtime_dir* to your jre1.7 path.
 
-&#8195 2.2 set *jardir* as the jars path to be analyzed 
+> 2.2 set *jardir* as the jars path to be analyzed 
 
-&#8195 2.3 set *outputfile* as you want to dump result
+> 2.3 set *outputfile* as you want to dump result
 
-&#8195 2.4 set *debug* to false or true, this is for debug!
+> 2.4 set *debug* to false or true, this is for debug!
