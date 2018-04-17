@@ -3,7 +3,7 @@ NPEDetector is designed to find the potential null pointer exception in the syst
 ## Found and fixed bugs
    [ZK-3006](https://issues.apache.org/jira/browse/ZOOKEEPER-3006)
    [HBASE-20419](https://issues.apache.org/jira/browse/HBASE-20419)(2)
-   [YARN-8164](https://issues.apache.org/jira/browse/YARN-8164)
+   [YARN-8164](https://issues.apache.org/jira/browse/YARN-8164)(3)
 ## Found and confirmed bugs
    [ZK-3007](https://issues.apache.org/jira/browse/ZOOKEEPER-3007)
    [ZK-3008](https://issues.apache.org/jira/browse/ZOOKEEPER-3008)
