@@ -85,7 +85,7 @@ In step5, we score each callee based on:
 + developer may bother with those massive [CNC](https://stackoverflow.com/questions/271526/avoiding-null-statements/271874#271874)
     
 # Usage
-1. We use maven build our project, so you can import it as existed maven project.
+1. We use maven build our project, so you can use eclipse or other IDE import it as existed maven project. You can also use "mvn clean compile assembly:single" to generate a runnable jar, but need to do step 2 first.
 2. vim the WALA  configuration file: ./NPEDetector/src/main/resources/wala.properties, you need to change:  
 
 > 2.1 the property *java_runtime_dir* to your jre1.7 path.
