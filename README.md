@@ -4,6 +4,7 @@ NPEDetector is designed to find the potential null pointer exception in the syst
    [ZK-3006](https://issues.apache.org/jira/browse/ZOOKEEPER-3006)
    [HBASE-20419](https://issues.apache.org/jira/browse/HBASE-20419)(2)
    [YARN-8164](https://issues.apache.org/jira/browse/YARN-8164)(3)
+   [YARN-7786](https://issues.apache.org/jira/browse/YARN-7786)
 ## Found and confirmed bugs
    [ZK-3007](https://issues.apache.org/jira/browse/ZOOKEEPER-3007)
    [ZK-3008](https://issues.apache.org/jira/browse/ZOOKEEPER-3008)
@@ -16,7 +17,6 @@ NPEDetector is designed to find the potential null pointer exception in the syst
    [ZK-3009](https://issues.apache.org/jira/browse/ZOOKEEPER-3009)
    [ZK-3010](https://issues.apache.org/jira/browse/ZOOKEEPER-3010)
    [ZK-3011](https://issues.apache.org/jira/browse/ZOOKEEPER-3011)
-   [YARN-7786](https://issues.apache.org/jira/browse/YARN-7786)
 ## Some great suggestions
    [ZK-3009](https://issues.apache.org/jira/browse/ZOOKEEPER-3009)
    [HDFS-13451](https://issues.apache.org/jira/browse/HDFS-13451)
