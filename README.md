@@ -17,6 +17,8 @@ NPEDetector is designed to find the potential null pointer exception in the syst
    [ZK-3009](https://issues.apache.org/jira/browse/ZOOKEEPER-3009)
    [ZK-3010](https://issues.apache.org/jira/browse/ZOOKEEPER-3010)
    [ZK-3011](https://issues.apache.org/jira/browse/ZOOKEEPER-3011)
+   [HELIX-701](https://issues.apache.org/jira/browse/HELIX-701)
+   [HELIX-702](https://issues.apache.org/jira/browse/HELIX-702)
 ## Some great suggestions
    [ZK-3009](https://issues.apache.org/jira/browse/ZOOKEEPER-3009)
    [HDFS-13451](https://issues.apache.org/jira/browse/HDFS-13451)
