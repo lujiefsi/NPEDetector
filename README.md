@@ -23,7 +23,7 @@ NPEDetector is designed to find the potential null pointer exception in the syst
    [STORM-3049](https://issues.apache.org/jira/browse/STORM-3049)(2)
    [STORM-3050](https://issues.apache.org/jira/browse/STORM-3050)(1)
    [STORM-3051](https://issues.apache.org/jira/browse/STORM-3051)(3)
-   [KAFKA-6899](https://issues.apache.org/jira/browse/KAFKA-6899)(2)
+   [KAFKA-6899](https://issues.apache.org/jira/browse/KAFKA-6899)(1)
    
 ## Some great suggestions
    [ZK-3009](https://issues.apache.org/jira/browse/ZOOKEEPER-3009)
