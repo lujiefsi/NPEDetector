@@ -8,8 +8,8 @@ NPEDetector is designed to find the potential null pointer exception in the syst
    [YARN-8164](https://issues.apache.org/jira/browse/YARN-8164)(3)
    [YARN-7786](https://issues.apache.org/jira/browse/YARN-7786)
 ## Found and confirmed bugs
-   [STORM-3048](https://issues.apache.org/jira/browse/STORM-3048)(3)
    [ZK-3008](https://issues.apache.org/jira/browse/ZOOKEEPER-3008)(1)
+   [STORM-3048](https://issues.apache.org/jira/browse/STORM-3048)(3)
    [HELIX-701](https://issues.apache.org/jira/browse/HELIX-701)(2)
    [HBASE-20420](https://issues.apache.org/jira/browse/HBASE-20420)(9)
    [HDFS-13451](https://issues.apache.org/jira/browse/HDFS-13451)(7)
