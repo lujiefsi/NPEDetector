@@ -14,15 +14,15 @@ NPEDetector is designed to find the potential null pointer exception in the syst
    [HELIX-701](https://issues.apache.org/jira/browse/HELIX-701)(2)
    [HBASE-20420](https://issues.apache.org/jira/browse/HBASE-20420)(9)
    [HDFS-13451](https://issues.apache.org/jira/browse/HDFS-13451)(7)
-   [STORM-3049](https://issues.apache.org/jira/browse/STORM-3049)(2)
-   [STORM-3050](https://issues.apache.org/jira/browse/STORM-3050)(1)
-   [STORM-3051](https://issues.apache.org/jira/browse/STORM-3051)(3)
+   [STORM-3049](https://github.com/apache/storm/pull/2656)(2)
+   [STORM-3051](https://github.com/apache/storm/pull/2656)(3)
 ## Found and pending bugs
    [HDFS-13452](https://issues.apache.org/jira/browse/HDFS-13452)(2)
    [CASSANDRA-14385](https://issues.apache.org/jira/browse/CASSANDRA-14385)(3)
    [ZK-3009](https://issues.apache.org/jira/browse/ZOOKEEPER-3009)(2)
    [ZK-3010](https://issues.apache.org/jira/browse/ZOOKEEPER-3010)(2)
    [ZK-3011](https://issues.apache.org/jira/browse/ZOOKEEPER-3011)(4)
+   [STORM-3050](https://github.com/apache/storm/pull/2655)(1)
    [HELIX-702](https://github.com/apache/helix/pull/201)(3)
    [KAFKA-6899](https://issues.apache.org/jira/browse/KAFKA-6899)(1)
    
