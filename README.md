@@ -1,7 +1,7 @@
 # NPEDetector
 NPEDetector is designed to find the potential null pointer exception in the systems writen by java(especially for distributed system). 
 ## Found and fixed bugs
-   [CLOUDSTACK-10356](https://issues.apache.org/jira/browse/CLOUDSTACK-10356)(10)
+   [CLOUDSTACK-10356](https://issues.apache.org/jira/browse/CLOUDSTACK-10356)(11)
    [ZK-3006](https://issues.apache.org/jira/browse/ZOOKEEPER-3006)(1)
    [ZK-3007](https://issues.apache.org/jira/browse/ZOOKEEPER-3007)(1)
    [HBASE-20419](https://issues.apache.org/jira/browse/HBASE-20419)(2)
