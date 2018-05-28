@@ -1,7 +1,7 @@
 # NPEDetector
 NPEDetector is designed to find the potential null pointer exception in the systems writen by java(especially for distributed system). 
 ## Found and fixed bugs
-   [CLOUDSTACK-10356](https://issues.apache.org/jira/browse/CLOUDSTACK-10356)(11)
+   [CLOUDSTACK-10356](https://issues.apache.org/jira/browse/CLOUDSTACK-10356)(10)
    [ZK-3006](https://issues.apache.org/jira/browse/ZOOKEEPER-3006)(1)
    [ZK-3007](https://issues.apache.org/jira/browse/ZOOKEEPER-3007)(1)
    [HBASE-20419](https://issues.apache.org/jira/browse/HBASE-20419)(2)
@@ -13,7 +13,7 @@ NPEDetector is designed to find the potential null pointer exception in the syst
    [STORM-3048](https://github.com/apache/storm/pull/2657)(3)
    [HELIX-701](https://issues.apache.org/jira/browse/HELIX-701)(2)
    [HBASE-20420](https://issues.apache.org/jira/browse/HBASE-20420)(8)
-   [HDFS-13451](https://issues.apache.org/jira/browse/HDFS-13451)(6)
+   [HDFS-13451](https://issues.apache.org/jira/browse/HDFS-13451)(7)
    [STORM-3049](https://github.com/apache/storm/pull/2656)(2)
    [STORM-3051](https://github.com/apache/storm/pull/2656)(3)
 ## Found and pending bugs
@@ -26,7 +26,7 @@ NPEDetector is designed to find the potential null pointer exception in the syst
 ## False postive   
    [HELIX-702](https://github.com/apache/helix/pull/201)(3)
    [HBASE-20420](https://issues.apache.org/jira/browse/HBASE-20420)(1)
-    [HDFS-13451](https://issues.apache.org/jira/browse/HDFS-13451)(1)
+   [CLOUDSTACK-10356](https://issues.apache.org/jira/browse/CLOUDSTACK-10356)(1)
 ## Some great suggestions
    [ZK-3009](https://issues.apache.org/jira/browse/ZOOKEEPER-3009)
    [HDFS-13451](https://issues.apache.org/jira/browse/HDFS-13451)
