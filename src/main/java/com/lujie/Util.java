@@ -1,21 +1,29 @@
 package com.lujie;
 
 import com.ibm.wala.classLoader.IClass;
+import com.ibm.wala.classLoader.IMethod;
 import com.ibm.wala.ipa.callgraph.CGNode;
 import com.ibm.wala.ssa.SSAAbstractInvokeInstruction;
 import com.ibm.wala.ssa.SSAInstruction;
 import com.ibm.wala.ssa.SSAThrowInstruction;
 import com.ibm.wala.types.ClassLoaderReference;
+import com.ibm.wala.types.MethodReference;
 import com.ibm.wala.types.TypeName;
 
 public class Util {
-	public static boolean isApplicationNode(CGNode node) {
-		IClass cls = node.getClassHierarchy().lookupClass(
-				node.getMethod().getReference().getDeclaringClass());
-		if (cls == null) {
+	public static boolean isApplicationClass(IClass iclass) {
+		if (iclass == null) {
 			return false;
 		}
-		return cls.getClassLoader().getReference()
+		return iclass.getClassLoader().getReference()
+				.equals(ClassLoaderReference.Application);
+	}
+	
+	public static boolean isApplicationMethod(MethodReference method) {
+		if (method == null) {
+			return false;
+		}
+		return method.getDeclaringClass().getClassLoader()
 				.equals(ClassLoaderReference.Application);
 	}
 
@@ -41,11 +49,11 @@ public class Util {
 		return false;
 	}
 	
-	public static String getSimpleMethodToString(CGNode node){
+	public static String getSimpleMethodToString(IMethod node){
 		StringBuilder sb = new StringBuilder();
-		sb.append(node.getMethod().getReference().getDeclaringClass().getName().getClassName().toString());
+		sb.append(node.getReference().getDeclaringClass().getName().getClassName().toString());
 		sb.append("#");
-		sb.append(node.getMethod().getName().toString());
+		sb.append(node.getName().toString());
 		return sb.toString();
 	}
 	

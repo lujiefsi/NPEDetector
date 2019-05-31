@@ -25,43 +25,36 @@ import com.ibm.wala.util.collections.Pair;
 
 public class ComplexControldependencyAnalysis extends ControldependencyAnalysis {
 
-	public ComplexControldependencyAnalysis(CallGraph callGraph,
-			Map<CGNode, CGNode> trasnCalleeToRootCallee) {
+	public ComplexControldependencyAnalysis(CallGraph callGraph, Map<CGNode, CGNode> trasnCalleeToRootCallee) {
 		super(callGraph, trasnCalleeToRootCallee);
 	}
 
 	@Override
 	public Map<CGNode, Set<CGNode>> analysis(Map<CGNode, Set<CGNode>> calleeMap2Callers) {
-		Map<Pair<CGNode, CGNode>, Set<Pair<CGNode, SSAInstruction>>> ssaMayReferenceNull = findSSAMayReferenceNull(calleeMap2Callers);
+		Map<Pair<CGNode, CGNode>, Set<Pair<CGNode, SSAInstruction>>> ssaMayReferenceNull = findSSAMayReferenceNull(
+				calleeMap2Callers);
 		filterByIfNENull(ssaMayReferenceNull);
 		return getNoCheckerCalleeToCallers(ssaMayReferenceNull);
 	}
 
 	private Map<Pair<CGNode, CGNode>, Set<Pair<CGNode, SSAInstruction>>> findSSAMayReferenceNull(
 			Map<CGNode, Set<CGNode>> calleeMapCallers) {
-		Map<Pair<CGNode, CGNode>, Set<Pair<CGNode, SSAInstruction>>> result = HashMapFactory
-				.make();
+		Map<Pair<CGNode, CGNode>, Set<Pair<CGNode, SSAInstruction>>> result = HashMapFactory.make();
 		for (Entry<CGNode, Set<CGNode>> entry : calleeMapCallers.entrySet()) {
 			CGNode callee = entry.getKey();
 			/* debug point for check special method */
-			if (callee.toString().contains("BinaryInputArchive")
-					&& callee.toString().contains("readBuffer")) {
+			if (callee.toString().contains("BinaryInputArchive") && callee.toString().contains("readBuffer")) {
 				System.out.print("");
 			}
 			Set<CGNode> callers = entry.getValue();
-			for (Iterator<CGNode> callerIterator = callers.iterator(); callerIterator
-					.hasNext();) {
+			for (Iterator<CGNode> callerIterator = callers.iterator(); callerIterator.hasNext();) {
 				CGNode caller = callerIterator.next();
 				IR ir = caller.getIR();
-				Iterator<CallSiteReference> callSiteIterator = callGraph
-						.getPossibleSites(caller, callee);
-				Set<Pair<CGNode, SSAInstruction>> refernces = HashSetFactory
-						.make();
+				Iterator<CallSiteReference> callSiteIterator = callGraph.getPossibleSites(caller, callee);
+				Set<Pair<CGNode, SSAInstruction>> refernces = HashSetFactory.make();
 				while (callSiteIterator.hasNext()) {
-					CallSiteReference callSiteReference = callSiteIterator
-							.next();
-					SSAAbstractInvokeInstruction[] ssaAbstractInvokeInstructions = ir
-							.getCalls(callSiteReference);
+					CallSiteReference callSiteReference = callSiteIterator.next();
+					SSAAbstractInvokeInstruction[] ssaAbstractInvokeInstructions = ir.getCalls(callSiteReference);
 					for (SSAAbstractInvokeInstruction ssaAbstractInvokeInstruction : ssaAbstractInvokeInstructions) {
 						int def = ssaAbstractInvokeInstruction.getDef();
 						if (def == -1) {
@@ -77,8 +70,7 @@ public class ComplexControldependencyAnalysis extends ControldependencyAnalysis 
 				}
 			}
 		}
-		Iterator<Entry<CGNode, Set<CGNode>>> entryIterator = calleeMapCallers
-				.entrySet().iterator();
+		Iterator<Entry<CGNode, Set<CGNode>>> entryIterator = calleeMapCallers.entrySet().iterator();
 		while (entryIterator.hasNext()) {
 			Entry<CGNode, Set<CGNode>> entry = entryIterator.next();
 			if (entry.getValue().size() == 0) {
@@ -88,15 +80,12 @@ public class ComplexControldependencyAnalysis extends ControldependencyAnalysis 
 		return result;
 	}
 
-	private void filterByIfNENull(
-			Map<Pair<CGNode, CGNode>, Set<Pair<CGNode, SSAInstruction>>> map) {
-		Iterator<Entry<Pair<CGNode, CGNode>, Set<Pair<CGNode, SSAInstruction>>>> entryIterator = map
-				.entrySet().iterator();
+	private void filterByIfNENull(Map<Pair<CGNode, CGNode>, Set<Pair<CGNode, SSAInstruction>>> map) {
+		Iterator<Entry<Pair<CGNode, CGNode>, Set<Pair<CGNode, SSAInstruction>>>> entryIterator = map.entrySet()
+				.iterator();
 		while (entryIterator.hasNext()) {
-			Entry<Pair<CGNode, CGNode>, Set<Pair<CGNode, SSAInstruction>>> entry = entryIterator
-					.next();
-			Iterator<Pair<CGNode, SSAInstruction>> pairIterator = entry
-					.getValue().iterator();
+			Entry<Pair<CGNode, CGNode>, Set<Pair<CGNode, SSAInstruction>>> entry = entryIterator.next();
+			Iterator<Pair<CGNode, SSAInstruction>> pairIterator = entry.getValue().iterator();
 			while (pairIterator.hasNext()) {
 				Pair<CGNode, SSAInstruction> pair = pairIterator.next();
 				if (controlByNENull(pair.fst, pair.snd)) {
@@ -115,8 +104,7 @@ public class ComplexControldependencyAnalysis extends ControldependencyAnalysis 
 		}
 	}
 
-	private Set<Pair<CGNode, SSAInstruction>> getFinalRefernces(int def,
-			CGNode node) {
+	private Set<Pair<CGNode, SSAInstruction>> getFinalRefernces(int def, CGNode node) {
 		Set<Pair<CGNode, SSAInstruction>> refernces = HashSetFactory.make();
 		// case 0:def.call()
 		DefUse du = node.getDU();
@@ -157,8 +145,7 @@ public class ComplexControldependencyAnalysis extends ControldependencyAnalysis 
 
 	private boolean controlByNENull(CGNode node, SSAInstruction ssaInstruction) {
 		/* debug point for check special method */
-		if (node.toString().contains("FsDatasetImpl")
-				&& node.toString().contains("getBlockLocalPathInfo")) {
+		if (node.toString().contains("FsDatasetImpl") && node.toString().contains("getBlockLocalPathInfo")) {
 			System.out.print("");
 		}
 		IR ir = node.getIR();
@@ -168,8 +155,8 @@ public class ComplexControldependencyAnalysis extends ControldependencyAnalysis 
 		try {
 			cdg = new ControlDependenceGraph<ISSABasicBlock>(exceptionPrunedCFG);
 		} catch (Throwable e) {
-			System.err.println("errors happends while contructing cdg of "
-					+ Util.getSimpleMethodToString(node));
+			System.err.println(
+					"errors happends while contructing cdg of " + Util.getSimpleMethodToString(node.getMethod()));
 		}
 		if (cdg == null) {
 			return true;
@@ -185,12 +172,10 @@ public class ComplexControldependencyAnalysis extends ControldependencyAnalysis 
 					}
 					int use0 = controlSSAInstruction.getUse(0);
 					int use1 = controlSSAInstruction.getUse(1);
-					if (ir.getSymbolTable().isNullConstant(use0)
-							&& use1 == ssaInstruction.getUse(0)) {
+					if (ir.getSymbolTable().isNullConstant(use0) && use1 == ssaInstruction.getUse(0)) {
 						return true;
 					}
-					if (ir.getSymbolTable().isNullConstant(use1)
-							&& use0 == ssaInstruction.getUse(0)) {
+					if (ir.getSymbolTable().isNullConstant(use1) && use0 == ssaInstruction.getUse(0)) {
 						return true;
 					}
 				}
@@ -199,8 +184,7 @@ public class ComplexControldependencyAnalysis extends ControldependencyAnalysis 
 		return false;
 	}
 
-	private void findPreBB(ControlDependenceGraph<ISSABasicBlock> cdg,
-			Set<ISSABasicBlock> preBBs, ISSABasicBlock bb) {
+	private void findPreBB(ControlDependenceGraph<ISSABasicBlock> cdg, Set<ISSABasicBlock> preBBs, ISSABasicBlock bb) {
 		Iterator<ISSABasicBlock> preBBIterator = cdg.getPredNodes(bb);
 		while (preBBIterator.hasNext()) {
 			ISSABasicBlock preBB = preBBIterator.next();
@@ -210,16 +194,15 @@ public class ComplexControldependencyAnalysis extends ControldependencyAnalysis 
 			findPreBB(cdg, preBBs, preBB);
 		}
 	}
-	
+
 	private Map<CGNode, Set<CGNode>> getNoCheckerCalleeToCallers(
 			Map<Pair<CGNode, CGNode>, Set<Pair<CGNode, SSAInstruction>>> map) {
-		Iterator<Entry<Pair<CGNode, CGNode>, Set<Pair<CGNode, SSAInstruction>>>> entryIterator = map
-				.entrySet().iterator();
-		Set<ScoreNode> ret = new TreeSet<ScoreNode>();
+		Iterator<Entry<Pair<CGNode, CGNode>, Set<Pair<CGNode, SSAInstruction>>>> entryIterator = map.entrySet()
+				.iterator();
+		Set<ScoreCallee> ret = new TreeSet<ScoreCallee>();
 		Map<CGNode, Set<CGNode>> calleeMap2Callers = HashMapFactory.make();
 		while (entryIterator.hasNext()) {
-			Entry<Pair<CGNode, CGNode>, Set<Pair<CGNode, SSAInstruction>>> entry = entryIterator
-					.next();
+			Entry<Pair<CGNode, CGNode>, Set<Pair<CGNode, SSAInstruction>>> entry = entryIterator.next();
 			CGNode caller = entry.getKey().fst;
 			CGNode callee = trasnCalleeToRootCallee.get(entry.getKey().snd);
 			Set<CGNode> callers = calleeMap2Callers.get(callee);

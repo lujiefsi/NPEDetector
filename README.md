@@ -73,16 +73,16 @@ NPEDetector is based on an famous static analysis framework [WALA](https://githu
 We apply two analysis strategies in NPEDetector, difference in step 4:
 
     step1 : find all return null method(RNM)
-
+    
     step2 : find all RNM' caller;
-
+    
     step3 : find all RNM return value's use instruction.
-
+    
     step4 : simple: check if null checker exists in caller, without construct ControldependencyGraph
-	        complex:check all use instructions whether controled by check null condition(CNC)
-
+            complex:check all use instructions whether controled by check null condition(CNC)
+    
     step5 : Score each callee:CNC numbers * 10 - caller number.
-
+    
     step6 : Sort all callees and print.
 Simple strategy may cause false negatives like:
  <pre><code>
@@ -90,19 +90,16 @@ Simple strategy may cause false negatives like:
     if (ret != null) ret.foo1;
     ret.field;//NPE, but our tool won't not reporte it.
 </code></pre>
-  
+
 In step5, we score each callee based on:
 + if some developer have consider CNC, but some are not, we think no CNC developeres are wrong
 + developer may bother with those massive [CNC](https://stackoverflow.com/questions/271526/avoiding-null-statements/271874#271874)
-    
+  
 # Usage
-1. We use maven build our project, so you can use eclipse or other IDE import it as existed maven project. You can also use "mvn clean compile assembly:single" to generate a runnable jar, but need to do step 2 first.
-2. vim the WALA  configuration file: ./NPEDetector/src/main/resources/wala.properties, you need to change:  
+1. Download the project
+2. Using  "mvn clean compile assembly:single" to generate a runnable jar in target directory.
+3. use command "java -jar ./target/NPEDectetor-1.0-SNAPSHOT-jar-with-dependencies.jar -inputDir /home/lujie/tmp -outputFile /tmp/NPEResult" to analysis
+4. inputDir  is the jar files that need to be analyzed, outputFile is where the result  print
+5. We use maven build our project, so you can use eclipse or other IDE import it as existed maven project. 
 
-> 2.1 the property *java_runtime_dir* to your jre1.7 path.
-
-> 2.2 set *jardir* as the jars path to be analyzed 
-
-> 2.3 set *outputfile* as you want to dump result
-
-> 2.4 set *debug* to false or true, this is for debug!
+> 
