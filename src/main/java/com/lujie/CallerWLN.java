@@ -1,34 +1,21 @@
 package com.lujie;
 
 import com.ibm.wala.classLoader.IMethod;
+/**
+ * caller with line number
+ */
 
-public class ScoreCallee implements Comparable<ScoreCallee> {
+public class CallerWLN {
 	public IMethod method = null;
-	public int score = 0;
-
-	public ScoreCallee(IMethod method, int checkSize, int uncheckSize) {
-		this.method = method;
-		this.score = checkSize - uncheckSize;
-	}
-
-	public int compareTo(ScoreCallee o) {
-		if (o.score - this.score > 0) {
-			return 1;
-		}
-		if (o.score - this.score < 0) {
-			return -1;
-		}
-		return this.toString().compareTo(o.toString());
-	}
-
+	public int linenumber = -1;
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
+		result = prime * result + linenumber;
 		result = prime * result + ((method == null) ? 0 : method.hashCode());
 		return result;
 	}
-
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj)
@@ -37,7 +24,9 @@ public class ScoreCallee implements Comparable<ScoreCallee> {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		ScoreCallee other = (ScoreCallee) obj;
+		CallerWLN other = (CallerWLN) obj;
+		if (linenumber != other.linenumber)
+			return false;
 		if (method == null) {
 			if (other.method != null)
 				return false;

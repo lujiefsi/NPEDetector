@@ -1,10 +1,10 @@
 package com.lujie;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
 import com.ibm.wala.classLoader.CallSiteReference;
@@ -21,6 +21,7 @@ import com.ibm.wala.ssa.SSAConditionalBranchInstruction;
 import com.ibm.wala.ssa.SSAInstruction;
 import com.ibm.wala.ssa.SSAInvokeInstruction;
 import com.ibm.wala.ssa.SSAPhiInstruction;
+import com.ibm.wala.ssa.SSAPutInstruction;
 import com.ibm.wala.ssa.SSAReturnInstruction;
 import com.ibm.wala.ssa.SymbolTable;
 import com.ibm.wala.types.MethodReference;
@@ -32,12 +33,14 @@ public class NPECallGraph {
 	private IClassHierarchy cha;
 	private IAnalysisCacheView cache;
 	Set<IMethod> returnNullMethods = HashSetFactory.make();
+	Set<MethodReference> returnNullMethodsref = HashSetFactory.make();
+	Set<IMethod> transReturnNullMethods = HashSetFactory.make();
 	private Map<MethodReference, Set<MethodReference>> caller2calleeRef = HashMapFactory.make();
 	private Map<MethodReference, Set<MethodReference>> callee2callerRef = HashMapFactory.make();
 	private Map<IMethod, Set<IMethod>> caller2callees = HashMapFactory.make();
 	private Map<IMethod, Set<IMethod>> callee2callers = HashMapFactory.make();
 	private Map<IMethod, Set<IMethod>> callee2check = HashMapFactory.make();
-	private Map<IMethod, Set<IMethod>> callee2uncheck = HashMapFactory.make();
+	private Map<IMethod, Set<CallerWLN>> callee2uncheck = HashMapFactory.make();
 	private Map<MethodReference, IMethod> ref2method = HashMapFactory.make();
 
 	public NPECallGraph(IClassHierarchy cha, boolean applicationOnly) {
@@ -48,21 +51,11 @@ public class NPECallGraph {
 	public void init() {
 		visistAllMethods();
 		buildCheckGraph();
-		buildUncheckGraph();
 	}
 
 	private void buildCheckGraph() {
 		for (IMethod returnNullNode : returnNullMethods) {
 			findCaller(returnNullNode, returnNullNode, new HashSet<IMethod>());
-		}
-	}
-
-	private void buildUncheckGraph() {
-		for (IMethod rnm : returnNullMethods) {
-			Set<IMethod> uncheckCallers = MapUtil.findOrCreateSet(callee2uncheck, rnm);
-			uncheckCallers.addAll(callee2callers.get(rnm));
-			Set<IMethod> checkCallers = MapUtil.findOrCreateSet(callee2check, rnm);
-			uncheckCallers.removeAll(checkCallers);
 		}
 	}
 
@@ -76,6 +69,13 @@ public class NPECallGraph {
 				visistAllInstructions(method);
 			}
 		}
+		for (MethodReference returnNullMethodRef : returnNullMethodsref) {
+			IMethod returnNullMethod = ref2method.get(returnNullMethodRef);
+			if (returnNullMethod != null) {
+				returnNullMethods.add(returnNullMethod);
+			}
+		}
+		returnNullMethods.removeAll(transReturnNullMethods);
 	}
 
 	private void visistAllInstructions(IMethod method) {
@@ -86,6 +86,20 @@ public class NPECallGraph {
 		for (SSAInstruction ins : ir.getInstructions()) {
 			if (ins instanceof SSAReturnInstruction && isReturnNullInstruction((SSAReturnInstruction) ins, ir)) {
 				returnNullMethods.add(method);
+			}
+			if (ins instanceof SSAConditionalBranchInstruction) {
+				int nullVal = isNEChecker(ir, (SSAConditionalBranchInstruction) ins);
+				if (nullVal != -1) {
+					SSAInstruction defIns = cache.getDefUse(ir).getDef(nullVal);
+					if (defIns instanceof SSAInvokeInstruction) {
+						MethodReference target = ((SSAInvokeInstruction) defIns).getDeclaredTarget();
+						if (Util.isApplicationMethod(target)) {
+							// may add the transReturnNullMethod, so we need remove them
+							// in visistAllMethods
+							returnNullMethodsref.add(target);
+						}
+					}
+				}
 			}
 			if (ins instanceof SSAInvokeInstruction) {
 				MethodReference target = ((SSAInvokeInstruction) ins).getDeclaredTarget();
@@ -165,18 +179,108 @@ public class NPECallGraph {
 						if (useIterator.hasNext()) {
 							SSAInstruction useInstruction = useIterator.next();
 							if (useInstruction instanceof SSAReturnInstruction) {
+								transReturnNullMethods.add(caller);
 								findCaller(rootCallee, caller, checkedNode);
 							} else if (useInstruction instanceof SSAConditionalBranchInstruction) {
+								/*
+								 * false negatives, now we try to return false once we have a checker assume the
+								 * code: if (RV!=null) RV.xxx(); RV.YYY. RV,YYY is not controlled by checker and
+								 * cause NPE. SO TODO sound this implements.
+								 */
 								if (isNEChecker(ir, (SSAConditionalBranchInstruction) useInstruction, def)) {
 									MapUtil.findOrCreateSet(callee2check, rootCallee).add(caller);
 								}
+							} else if (useInstruction instanceof SSAAbstractInvokeInstruction && !isUsedInInvoke(ir,
+									(SSAAbstractInvokeInstruction) useInstruction, def, new HashSet<IMethod>())) {
+								continue;
+							} else if (useInstruction instanceof SSAPhiInstruction
+									&& !phiIsUsed(ir, (SSAPhiInstruction) useInstruction)) {
+								continue;
+							} else if (useInstruction instanceof SSAPutInstruction) {
+								/*
+								 * false negatives,now we does't confider the field
+								 * */
+								continue;
+							}
+							else {
+								CallerWLN callerWLN = new CallerWLN();
+								callerWLN.linenumber = Util.getLineNumber(ir, instruction);
+								callerWLN.method = caller;
+								MapUtil.findOrCreateSet(callee2uncheck, rootCallee).add(callerWLN);
 							}
 						}
 					}
 				}
-
 			}
 		}
+	}
+
+	private boolean phiIsUsed(IR ir, SSAPhiInstruction phiInstruction) {
+		int def = phiInstruction.getDef();
+		Iterator<SSAInstruction> useIterator = cache.getDefUse(ir).getUses(def);
+		if (useIterator.hasNext()) {
+			SSAInstruction useInstruction = useIterator.next();
+			if (useInstruction instanceof SSAReturnInstruction) {
+				return false;
+			} else if (useInstruction instanceof SSAConditionalBranchInstruction
+					&& isNEChecker(ir, (SSAConditionalBranchInstruction) useInstruction, def)) {
+				return false;
+			} else if (useInstruction instanceof SSAAbstractInvokeInstruction && !isUsedInInvoke(ir,
+					(SSAAbstractInvokeInstruction) useInstruction, def, new HashSet<IMethod>())) {
+				return false;
+			} else if (useInstruction instanceof SSAPhiInstruction) {
+				/*false negatives, we only consider one layer phi
+				 * TODO implement more sound*/
+				return false;
+			}
+		}
+		return true;
+	}
+
+	private boolean isUsedInInvoke(IR ir, SSAAbstractInvokeInstruction ins, int target, HashSet<IMethod> visitedNodes) {
+		if (ins.getDeclaredTarget().isInit() || ins.getDeclaredTarget().getName().toString().equals("append")) {
+			return false;
+		}
+		if (!ins.isStatic() && ins.getUse(0) == target) {
+			return true;
+		}
+		IMethod callee = ref2method.get(ins.getDeclaredTarget());
+		if (callee == null) {
+			return false;
+		}
+		for (int i = 0; i < ins.getNumberOfUses(); i++) {
+			if (ins.getUse(i) == target) {
+				return isUsedInCallee(cache.getIR(callee), i + 1, visitedNodes);
+			}
+		}
+		return true;
+	}
+
+	private boolean isUsedInCallee(IR ir, int target, HashSet<IMethod> visitedNodes) {
+		if (ir == null) {
+			return false;
+		}
+		if (visitedNodes.contains(ir.getMethod())) {
+			return false;
+		}
+		visitedNodes.add(ir.getMethod());
+		Iterator<SSAInstruction> useInsIter = cache.getDefUse(ir).getUses(target);
+		/*
+		 * false positive, now we try to return false once a checker or invoke is false
+		 * assume we use the RV many times and one of them has no checker and one has
+		 * checker we must miss one SO TODO sound this implements.
+		 */
+		while (useInsIter.hasNext()) {
+			SSAInstruction useInstruction = useInsIter.next();
+			if (useInstruction instanceof SSAConditionalBranchInstruction
+					&& isNEChecker(ir, (SSAConditionalBranchInstruction) useInstruction, target)) {
+				return false;
+			} else if (useInstruction instanceof SSAAbstractInvokeInstruction
+					&& !isUsedInInvoke(ir, (SSAAbstractInvokeInstruction) useInstruction, target, visitedNodes)) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	public boolean isNEChecker(IR ir, SSAConditionalBranchInstruction ssaInstruction, int def) {
@@ -194,19 +298,40 @@ public class NPECallGraph {
 		return false;
 	}
 
-	public int getUncheckSize(IMethod method) {
-		return callee2uncheck.get(method).size();
-	}
-	public int getCheckSize(IMethod method) {
-		return callee2check.get(method).size();
+	public int isNEChecker(IR ir, SSAConditionalBranchInstruction ssaInstruction) {
+		if (ssaInstruction.getNumberOfUses() != 2) {
+			return -1;
+		}
+		int use0 = ssaInstruction.getUse(0);
+		int use1 = ssaInstruction.getUse(1);
+		if (ir.getSymbolTable().isNullConstant(use0)) {
+			return use1;
+		}
+		if (ir.getSymbolTable().isNullConstant(use1)) {
+			return use0;
+		}
+		return -1;
 	}
 
-	public  Set<IMethod> getReturnNullMethods() {
+	public int getUncheckSize(IMethod method) {
+		Set<CallerWLN> uncheckmethod = callee2uncheck.get(method);
+		return uncheckmethod == null ? 0 : uncheckmethod.size();
+	}
+
+	public int getCheckSize(IMethod method) {
+		Set<IMethod> checkmethod = callee2check.get(method);
+		return checkmethod == null ? 0 : checkmethod.size();
+	}
+
+	public Set<IMethod> getReturnNullMethods() {
 		return returnNullMethods;
 	}
 
-	public Set<IMethod> getUncheckCallers(IMethod method) {
-		// TODO Auto-generated method stub
+	public Set<CallerWLN> getUncheckCallers(IMethod method) {
+		Set<CallerWLN> uncheckmethod = callee2uncheck.get(method);
+		if (uncheckmethod == null) {
+			return Collections.EMPTY_SET;
+		}
 		return callee2uncheck.get(method);
 	}
 }

@@ -36,7 +36,6 @@ public class NPEDetector {
 	private NPECallGraph callGraph = null;
 	AnalysisCache analysisCache = new AnalysisCacheImpl();
 	private String outputFile = null;
-	private int weight = 3;
 	private ClassHierarchy cha;
 
 	public static void main(String[] args) throws IOException, ClassHierarchyException, IllegalArgumentException,
@@ -53,11 +52,14 @@ public class NPEDetector {
 		try {
 			writer = new FileWriter(file);
 			for (ScoreCallee scoreNode : scoreNodes) {
+				if (callGraph.getUncheckCallers(scoreNode.method).isEmpty()) {
+					continue;
+				}
 				StringBuilder sb = new StringBuilder();
-				sb.append(Util.getSimpleMethodToString(scoreNode.method));
-				for (IMethod caller : callGraph.getUncheckCallers(scoreNode.method)) {
+				sb.append(scoreNode.method);
+				for (CallerWLN caller : callGraph.getUncheckCallers(scoreNode.method)) {
 					sb.append(" ");
-					sb.append(Util.getSimpleMethodToString(caller));
+					sb.append(Util.getSimpleMethodToString(caller.method)+"#"+caller.linenumber);
 				}
 				sb.append("\n");
 				writer.write(sb.toString());
@@ -81,7 +83,7 @@ public class NPEDetector {
 		Set<ScoreCallee> ret = new TreeSet<ScoreCallee>();
 		for (IMethod method : callGraph.getReturnNullMethods()) {
 			ScoreCallee scoreNode = new ScoreCallee(method, callGraph.getCheckSize(method),
-					callGraph.getUncheckSize(method), weight);
+					callGraph.getUncheckSize(method));
 			ret.add(scoreNode);
 		}
 		return ret;
