@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import com.ibm.wala.classLoader.CallSiteReference;
@@ -17,6 +18,8 @@ import com.ibm.wala.ipa.cha.IClassHierarchy;
 import com.ibm.wala.ssa.DefUse;
 import com.ibm.wala.ssa.IR;
 import com.ibm.wala.ssa.SSAAbstractInvokeInstruction;
+import com.ibm.wala.ssa.SSAArrayStoreInstruction;
+import com.ibm.wala.ssa.SSACheckCastInstruction;
 import com.ibm.wala.ssa.SSAConditionalBranchInstruction;
 import com.ibm.wala.ssa.SSAInstruction;
 import com.ibm.wala.ssa.SSAInvokeInstruction;
@@ -51,6 +54,51 @@ public class NPECallGraph {
 	public void init() {
 		visistAllMethods();
 		buildCheckGraph();
+		filterChecker();
+	}
+
+	private void filterChecker() {
+		for (Entry<IMethod, Set<IMethod>> checkEntry : callee2check.entrySet()) {
+			Set<CallerWLN> uncheckCallers = callee2uncheck.get(checkEntry.getKey());
+			if (uncheckCallers == null) {
+				continue;
+			}
+			Set<CallerWLN> removedCallers = HashSetFactory.make();
+			Set<IMethod> checkedCallers = HashSetFactory.make();
+			checkedCallers.addAll(checkEntry.getValue());
+			for (IMethod checkedCaller : checkEntry.getValue()) {
+				checkedCallers.addAll(getPreNodes(checkedCaller, 1, 1));
+
+			}
+			for (CallerWLN uncheckCaller : uncheckCallers) {
+				if (checkedCallers.contains(uncheckCaller.method)) {
+					removedCallers.add(uncheckCaller);
+				} else {
+					/*
+					 * Context insensitive, so False Negatives
+					 */
+					Set<IMethod> callerOfuncheckCaller = getPreNodes(uncheckCaller.method, 1, 5);
+					callerOfuncheckCaller.retainAll(checkedCallers);
+					if (!callerOfuncheckCaller.isEmpty()) {
+						removedCallers.add(uncheckCaller);
+					}
+				}
+			}
+			uncheckCallers.removeAll(removedCallers);
+		}
+	}
+
+	public Set<IMethod> getPreNodes(IMethod callee, int depth, int maxDepth) {
+		Set<IMethod> callers = getPredNodes(callee);
+		Set<IMethod> ret = HashSetFactory.make();
+		if (depth > maxDepth || callers == null || callers.isEmpty()) {
+			return ret;
+		}
+		ret.addAll(callers);
+		for (IMethod caller : callers) {
+			ret.addAll(getPreNodes(caller, depth + 1, maxDepth));
+		}
+		return ret;
 	}
 
 	private void buildCheckGraph() {
@@ -61,6 +109,10 @@ public class NPECallGraph {
 
 	private void visistAllMethods() {
 		for (IClass iclass : cha) {
+			if (iclass.toString().contains("shaded")) {
+				/* shaded or test jar should not be include */
+				continue;
+			}
 			if (!Util.isApplicationClass(iclass)) {
 				continue;
 			}
@@ -143,7 +195,7 @@ public class NPECallGraph {
 		return null;
 	}
 
-	public Iterator<IMethod> getPredNodes(IMethod method) {
+	public Set<IMethod> getPredNodes(IMethod method) {
 		Set<MethodReference> callersRef = MapUtil.findOrCreateSet(callee2callerRef, method.getReference());
 		Set<IMethod> callers = MapUtil.findOrCreateSet(callee2callers, method);
 		if (!callersRef.isEmpty() && callers.isEmpty()) {
@@ -154,7 +206,7 @@ public class NPECallGraph {
 				}
 			}
 		}
-		return callers.iterator();
+		return callers;
 	}
 
 	private void findCaller(IMethod rootCallee, IMethod transcallee, Collection<IMethod> checkedNode) {
@@ -162,7 +214,7 @@ public class NPECallGraph {
 			return;
 		}
 		checkedNode.add(transcallee);
-		Iterator<IMethod> callerIterator = getPredNodes(transcallee);
+		Iterator<IMethod> callerIterator = getPredNodes(transcallee).iterator();
 		while (callerIterator.hasNext()) {
 			IMethod caller = callerIterator.next();
 			IR ir = cache.getIR(caller);
@@ -175,8 +227,8 @@ public class NPECallGraph {
 					SSAAbstractInvokeInstruction ssaAbstractInvokeInstruction = (SSAAbstractInvokeInstruction) instruction;
 					if (ssaAbstractInvokeInstruction.getDeclaredTarget().equals(transcallee.getReference())) {
 						int def = ssaAbstractInvokeInstruction.getDef();
-						Iterator<SSAInstruction> useIterator = du.getUses(def);
-						if (useIterator.hasNext()) {
+						Iterator<SSAInstruction> useIterator = getUseWOCast(du, def);
+						while (useIterator.hasNext()) {
 							SSAInstruction useInstruction = useIterator.next();
 							if (useInstruction instanceof SSAReturnInstruction) {
 								transReturnNullMethods.add(caller);
@@ -199,10 +251,14 @@ public class NPECallGraph {
 							} else if (useInstruction instanceof SSAPutInstruction) {
 								/*
 								 * false negatives,now we does't confider the field
-								 * */
+								 */
 								continue;
-							}
-							else {
+							} else if (useInstruction instanceof SSAArrayStoreInstruction) {
+								/*
+								 * LOG.info("{}{}",RNM,RNM);
+								 */
+								continue;
+							} else {
 								CallerWLN callerWLN = new CallerWLN();
 								callerWLN.linenumber = Util.getLineNumber(ir, instruction);
 								callerWLN.method = caller;
@@ -213,6 +269,17 @@ public class NPECallGraph {
 				}
 			}
 		}
+	}
+
+	Iterator<SSAInstruction> getUseWOCast(DefUse du, int def) {
+		Iterator<SSAInstruction> useIterator = du.getUses(def);
+		if (useIterator.hasNext()) {
+			SSAInstruction useIns = useIterator.next();
+			if (useIns instanceof SSACheckCastInstruction) {
+				def = useIns.getDef();
+			}
+		}
+		return du.getUses(def);
 	}
 
 	private boolean phiIsUsed(IR ir, SSAPhiInstruction phiInstruction) {
@@ -229,8 +296,9 @@ public class NPECallGraph {
 					(SSAAbstractInvokeInstruction) useInstruction, def, new HashSet<IMethod>())) {
 				return false;
 			} else if (useInstruction instanceof SSAPhiInstruction) {
-				/*false negatives, we only consider one layer phi
-				 * TODO implement more sound*/
+				/*
+				 * false negatives, we only consider one layer phi TODO implement more sound
+				 */
 				return false;
 			}
 		}
@@ -277,6 +345,19 @@ public class NPECallGraph {
 				return false;
 			} else if (useInstruction instanceof SSAAbstractInvokeInstruction
 					&& !isUsedInInvoke(ir, (SSAAbstractInvokeInstruction) useInstruction, target, visitedNodes)) {
+				return false;
+			} else if (useInstruction instanceof SSAPhiInstruction
+					&& !phiIsUsed(ir, (SSAPhiInstruction) useInstruction)) {
+				return false;
+			} else if (useInstruction instanceof SSAPutInstruction) {
+				/*
+				 * false negatives,now we does't confider the field
+				 */
+				return false;
+			} else if (useInstruction instanceof SSAArrayStoreInstruction) {
+				/*
+				 * LOG.info("{}{}",RNM,RNM);
+				 */
 				return false;
 			}
 		}
