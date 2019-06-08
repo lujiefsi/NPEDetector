@@ -17,6 +17,7 @@ import com.ibm.wala.ipa.callgraph.IAnalysisCacheView;
 import com.ibm.wala.ipa.cha.IClassHierarchy;
 import com.ibm.wala.ssa.DefUse;
 import com.ibm.wala.ssa.IR;
+import com.ibm.wala.ssa.ISSABasicBlock;
 import com.ibm.wala.ssa.SSAAbstractInvokeInstruction;
 import com.ibm.wala.ssa.SSAArrayStoreInstruction;
 import com.ibm.wala.ssa.SSACheckCastInstruction;
@@ -37,6 +38,7 @@ public class NPECallGraph {
 	private IAnalysisCacheView cache;
 	Set<IMethod> returnNullMethods = HashSetFactory.make();
 	Set<MethodReference> returnNullMethodsref = HashSetFactory.make();
+	private Set<MethodReference> resourceCloseMethod = HashSetFactory.make();
 	Set<IMethod> transReturnNullMethods = HashSetFactory.make();
 	private Map<MethodReference, Set<MethodReference>> caller2calleeRef = HashMapFactory.make();
 	private Map<MethodReference, Set<MethodReference>> callee2callerRef = HashMapFactory.make();
@@ -121,6 +123,7 @@ public class NPECallGraph {
 				visistAllInstructions(method);
 			}
 		}
+		returnNullMethodsref.removeAll(resourceCloseMethod);
 		for (MethodReference returnNullMethodRef : returnNullMethodsref) {
 			IMethod returnNullMethod = ref2method.get(returnNullMethodRef);
 			if (returnNullMethod != null) {
@@ -148,6 +151,9 @@ public class NPECallGraph {
 						if (Util.isApplicationMethod(target)) {
 							// may add the transReturnNullMethod, so we need remove them
 							// in visistAllMethods
+							if(ir.getBasicBlockForInstruction(ins).isCatchBlock()){
+								resourceCloseMethod.add(target);
+							}
 							returnNullMethodsref.add(target);
 						}
 					}
