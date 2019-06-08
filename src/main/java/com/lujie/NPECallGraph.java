@@ -213,6 +213,9 @@ public class NPECallGraph {
 		if (checkedNode.contains(transcallee)) {
 			return;
 		}
+		if (rootCallee.toString().contains("YarnScheduler")&&rootCallee.toString().contains("getRMContainer")) {
+			System.out.println("123");
+		}
 		checkedNode.add(transcallee);
 		Iterator<IMethod> callerIterator = getPredNodes(transcallee).iterator();
 		while (callerIterator.hasNext()) {
@@ -227,7 +230,14 @@ public class NPECallGraph {
 					SSAAbstractInvokeInstruction ssaAbstractInvokeInstruction = (SSAAbstractInvokeInstruction) instruction;
 					if (ssaAbstractInvokeInstruction.getDeclaredTarget().equals(transcallee.getReference())) {
 						int def = ssaAbstractInvokeInstruction.getDef();
-						Iterator<SSAInstruction> useIterator = getUseWOCast(du, def);
+						Iterator<SSAInstruction> useIterator = du.getUses(def);
+						if (useIterator.hasNext()) {
+							SSAInstruction useIns = useIterator.next();
+							if (useIns instanceof SSACheckCastInstruction) {
+								def = useIns.getDef();
+							}
+						}
+						useIterator = du.getUses(def);
 						while (useIterator.hasNext()) {
 							SSAInstruction useInstruction = useIterator.next();
 							if (useInstruction instanceof SSAReturnInstruction) {
@@ -269,17 +279,6 @@ public class NPECallGraph {
 				}
 			}
 		}
-	}
-
-	Iterator<SSAInstruction> getUseWOCast(DefUse du, int def) {
-		Iterator<SSAInstruction> useIterator = du.getUses(def);
-		if (useIterator.hasNext()) {
-			SSAInstruction useIns = useIterator.next();
-			if (useIns instanceof SSACheckCastInstruction) {
-				def = useIns.getDef();
-			}
-		}
-		return du.getUses(def);
 	}
 
 	private boolean phiIsUsed(IR ir, SSAPhiInstruction phiInstruction) {
@@ -411,7 +410,7 @@ public class NPECallGraph {
 	public Set<CallerWLN> getUncheckCallers(IMethod method) {
 		Set<CallerWLN> uncheckmethod = callee2uncheck.get(method);
 		if (uncheckmethod == null) {
-			return Collections.EMPTY_SET;
+			return Collections.emptySet();
 		}
 		return callee2uncheck.get(method);
 	}
