@@ -213,9 +213,6 @@ public class NPECallGraph {
 		if (checkedNode.contains(transcallee)) {
 			return;
 		}
-		if (rootCallee.toString().contains("YarnScheduler")&&rootCallee.toString().contains("getRMContainer")) {
-			System.out.println("123");
-		}
 		checkedNode.add(transcallee);
 		Iterator<IMethod> callerIterator = getPredNodes(transcallee).iterator();
 		while (callerIterator.hasNext()) {
