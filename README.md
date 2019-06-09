@@ -46,27 +46,34 @@ above figure shows the bug in hbase:
 
 We can see that this bug is complex(involed 4 node and one crash event).
 Actually, the developers have considered the master crash situation while parse:
-<pre><code>
+
+```java
 //callee: parse
 public Master parse(byte[] data){
     if (data == null){
         return null;
     }
 }
-</code></pre>
+```
+
 
 but in its caller developer does not take the null pointer into account:
-<pre><code>
+```java
 //caller getMasterInfoPort
 public getMasterInfoPort(byte[] data){
     Master master = parse(getData(false));
     return master.getInfoPort();
 }
-</code></pre>
+```
 
 This bug shows that NPE happends in corner case but some (callee) developers are wake up this 
-case. So we develop NPEDetector to catch this simpe bug pattern:<font color=red size=4>callee return null, but caller
+case. So we develop NPEDetector to catch this simple bug pattern:<font color=red size=4>callee return null, but caller
 does not check it.</font>
+
+NPEDetector will output two type result:
+
+1. Nullable method who may return null method. Like "parse".
+2. NPE point who may throw null pointer exception, like "getMasterInfoPort#4"
 
 # Approach
 NPEDetector is based on an famous static analysis framework [WALA](https://github.com/wala/WALA).
@@ -94,12 +101,11 @@ Simple strategy may cause false negatives like:
 In step5, we score each callee based on:
 + if some developer have consider CNC, but some are not, we think no CNC developeres are wrong
 + developer may bother with those massive [CNC](https://stackoverflow.com/questions/271526/avoiding-null-statements/271874#271874)
-  
 # Usage
 1. Download the project
 2. Using  "mvn clean compile assembly:single" to generate a runnable jar in target directory.
-3. use command "java -jar ./target/NPEDectetor-1.0-SNAPSHOT-jar-with-dependencies.jar -inputDir /home/lujie/tmp -outputFile /tmp/NPEResult" to analysis
-4. inputDir  is the jar files that need to be analyzed, outputFile is where the result  print
+3. use command "java -jar ./target/NPEDectetor-1.0-SNAPSHOT-jar-with-dependencies.jar -inputDir /home/lujie/tmp -outputFileNA /tmp/Result_NA -outputFileNPE /tmp/Result_NPE" to analysis
+4. inputDir  is the jar files that need to be analyzed, outputFileNA is the file who store the method who may return null, outputFileNPE  is the file  who store NPE point.
 5. We use maven build our project, so you can use eclipse or other IDE import it as existed maven project. 
 
 > 

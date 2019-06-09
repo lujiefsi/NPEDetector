@@ -35,7 +35,8 @@ public class NPEDetector {
 	private String inputDir = null;
 	private NPECallGraph callGraph = null;
 	AnalysisCache analysisCache = new AnalysisCacheImpl();
-	private String outputFile = null;
+	private String outputFileNA = null;
+	private String outputFileNPE = null;
 	private ClassHierarchy cha;
 
 	public static void main(String[] args) throws IOException, ClassHierarchyException, IllegalArgumentException,
@@ -47,11 +48,15 @@ public class NPEDetector {
 	}
 
 	private void dumpResult(Set<ScoreCallee> scoreNodes) {
-		File file = new File(outputFile);
-		FileWriter writer = null;
+		File fileNullable = new File(outputFileNA);
+		FileWriter writerNullable = null;
+		File fileNPE = new File(outputFileNPE);
+		FileWriter writerNPE = null;
 		try {
-			writer = new FileWriter(file);
+			writerNullable = new FileWriter(fileNullable);
+			writerNPE = new FileWriter(fileNPE);
 			for (ScoreCallee scoreNode : scoreNodes) {
+				writerNullable.write(scoreNode.method + "\n");
 				if (callGraph.getUncheckCallers(scoreNode.method).isEmpty()) {
 					continue;
 				}
@@ -59,18 +64,26 @@ public class NPEDetector {
 				sb.append(scoreNode.method);
 				for (CallerWLN caller : callGraph.getUncheckCallers(scoreNode.method)) {
 					sb.append(" ");
-					sb.append(Util.getSimpleMethodToString(caller.method)+"#"+caller.linenumber);
+					sb.append(Util.getSimpleMethodToString(caller.method) + "#" + caller.linenumber);
 				}
 				sb.append("\n");
-				writer.write(sb.toString());
+				writerNPE.write(sb.toString());
 			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} finally {
-			if (writer != null) {
+			if (writerNullable != null) {
 				try {
-					writer.close();
+					writerNullable.close();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+			if (writerNPE != null) {
+				try {
+					writerNPE.close();
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -92,7 +105,8 @@ public class NPEDetector {
 	private void checkParameter(String[] args) throws ParseException {
 		Options options = new Options();
 		options.addOption("inputDir", true, "the directory including the jars that are test ");
-		options.addOption("outputFile", true, "the file where the result output");
+		options.addOption("outputFileNA", true, "the file where the result output");
+		options.addOption("outputFileNPE", true, "the file where the result output");
 		CommandLineParser parser = new DefaultParser();
 		CommandLine cmd = parser.parse(options, args);
 		if (cmd.hasOption("inputDir")) {
@@ -101,11 +115,17 @@ public class NPEDetector {
 		if (inputDir == null) {
 			Util.exitWithErrorMessage("you should specify input directory");
 		}
-		if (cmd.hasOption("outputFile")) {
-			outputFile = cmd.getOptionValue("outputFile");
+		if (cmd.hasOption("outputFileNA")) {
+			outputFileNA = cmd.getOptionValue("outputFileNA");
 		}
-		if (outputFile == null) {
-			Util.exitWithErrorMessage("you should specify output file");
+		if (outputFileNA == null) {
+			Util.exitWithErrorMessage("you should specify output file for nullable method");
+		}
+		if (cmd.hasOption("outputFileNPE")) {
+			outputFileNPE = cmd.getOptionValue("outputFileNPE");
+		}
+		if (outputFileNPE == null) {
+			Util.exitWithErrorMessage("you should specify output file for potential Null Pointer Exception");
 		}
 	}
 
