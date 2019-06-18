@@ -106,6 +106,7 @@ public class NPECallGraph {
 		for (IMethod returnNullNode : returnNullMethods) {
 			findCaller(returnNullNode, returnNullNode, new HashSet<IMethod>());
 		}
+		returnNullMethods.removeAll(transReturnNullMethods);
 	}
 
 	private void visistAllMethods() {
@@ -129,7 +130,6 @@ public class NPECallGraph {
 				returnNullMethods.add(returnNullMethod);
 			}
 		}
-		returnNullMethods.removeAll(transReturnNullMethods);
 	}
 
 	private void visistAllInstructions(IMethod method) {
@@ -185,7 +185,7 @@ public class NPECallGraph {
 		SSAInstruction defIns = defUse.getDef(use);
 		if (defIns instanceof SSAPhiInstruction) {
 			for (int i = 0; i < defIns.getNumberOfUses(); i++) {
-				use = defIns.getUse(0);
+				use = defIns.getUse(i);
 				if (use != -1 && symbolTable.isNullConstant(use)) {
 					return true;
 				}
