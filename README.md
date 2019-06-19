@@ -1,5 +1,10 @@
 # NPEDetector
 NPEDetector is designed to find the potential null pointer exception in the systems writen by java(especially for distributed system). 
+
+# NPEDetector -V1
+
+The V1 version is in [master branch](https://github.com/lujiefsi/NPEDetector/tree/master)
+
 ## Found and fixed bugs(total 26)
    [CLOUDSTACK-10356](https://issues.apache.org/jira/browse/CLOUDSTACK-10356)(11)
    [ZK-3006](https://issues.apache.org/jira/browse/ZOOKEEPER-3006)(1)
@@ -10,6 +15,7 @@ NPEDetector is designed to find the potential null pointer exception in the syst
    [STORM-3048](https://github.com/apache/storm/pull/2657)(3)
    [ZK-3009](https://issues.apache.org/jira/browse/ZOOKEEPER-3009)(1)
    [ZK-3009-3.4](https://issues.apache.org/jira/browse/ZOOKEEPER-3009)(3)
+
 ## Found and confirmed bugs
    [HELIX-701](https://github.com/apache/helix/pull/200)(2)
    [ZK-3008](https://issues.apache.org/jira/browse/ZOOKEEPER-3008)(1)
@@ -77,30 +83,35 @@ NPEDetector will output two type result:
 
 # Approach
 NPEDetector is based on an famous static analysis framework [WALA](https://github.com/wala/WALA).
-We apply two analysis strategies in NPEDetector, difference in step 4:
 
-    step1 : find all return null method(RNM)
-    
-    step2 : find all RNM' caller;
-    
-    step3 : find all RNM return value's use instruction.
-    
-    step4 : simple: check if null checker exists in caller, without construct ControldependencyGraph
-            complex:check all use instructions whether controled by check null condition(CNC)
-    
-    step5 : Score each callee:CNC numbers * 10 - caller number.
-    
-    step6 : Sort all callees and print.
-Simple strategy may cause false negatives like:
- <pre><code>
-    ret = foo();
-    if (ret != null) ret.foo1;
-    ret.field;//NPE, but our tool won't not reporte it.
-</code></pre>
+NPEDetector-V1 use the WALA built-in call graph that has pointer and other analysis, but is too slow to analysis the million lines level source code, like HADOOP.
 
-In step5, we score each callee based on:
-+ if some developer have consider CNC, but some are not, we think no CNC developeres are wrong
-+ developer may bother with those massive [CNC](https://stackoverflow.com/questions/271526/avoiding-null-statements/271874#271874)
+In current version, we build call graph directly class hierarchy(CHA).
+
+    step1 : iterate the all methods based on CHA.
+    step2 : (1)record all return null methods(RNM).(2) record the relation between callee and caller.
+    step3: check the return value of RNM is checked in caller. We adopt the  aggressive strategy to filter the NPE. so we have  many false negatives.
+    step4: score the callee and rank, print the callee and its unchecked callers.
+## Score
+
+ 
+$$
+score = unchecked size - checked size + exceptionWeight
+$$
+unchecked size is the number of unchecked callers of RNM, checked size is the number of checked callers .
+
+exception Weight is score when return null exists in exception handler.
+
+# Some false negatives
+
+```java
+   ret = foo();
+   if (ret != null) ret.foo1;
+   ret.field;//NPE, but our tool won't not reporte it.
+```
+
+
+
 # Usage
 1. Download the project
 2. Using  "mvn clean compile assembly:single" to generate a runnable jar in target directory.
