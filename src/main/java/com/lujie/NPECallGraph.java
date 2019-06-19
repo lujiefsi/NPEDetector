@@ -143,7 +143,7 @@ public class NPECallGraph {
 				returnNullMethods.add(method);
 			}
 			if (ins instanceof SSAConditionalBranchInstruction) {
-				int nullVal = isNEChecker(ir, (SSAConditionalBranchInstruction) ins);
+				int nullVal = getNEChecker(ir, (SSAConditionalBranchInstruction) ins);
 				if (nullVal != -1) {
 					SSAInstruction defIns = cache.getDefUse(ir).getDef(nullVal);
 					if (defIns instanceof SSAInvokeInstruction) {
@@ -382,7 +382,7 @@ public class NPECallGraph {
 		return false;
 	}
 
-	public int isNEChecker(IR ir, SSAConditionalBranchInstruction ssaInstruction) {
+	public int getNEChecker(IR ir, SSAConditionalBranchInstruction ssaInstruction) {
 		if (ssaInstruction.getNumberOfUses() != 2) {
 			return -1;
 		}
