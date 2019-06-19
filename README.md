@@ -1,5 +1,5 @@
 # NPEDetector
-NPEDetector is designed to find the potential null pointer exception in the systems writen by java(especially for distributed system). 
+NPEDetector is designed to find the potential null pointer exception in the systems writen by java(especially for large distributed system).
 
 # NPEDetector -V1
 
@@ -81,6 +81,12 @@ NPEDetector will output two type result:
 1. Nullable method who may return null method. Like "parse".
 2. NPE point who may throw null pointer exception, like "getMasterInfoPort#4"
 
+
+
+**NPEDetector  is designed for such simple case, not systematically finding all NPEs.**
+
+
+
 # Approach
 NPEDetector is based on an famous static analysis framework [WALA](https://github.com/wala/WALA).
 
@@ -94,7 +100,7 @@ In current version, we build call graph directly class hierarchy(CHA).
     step4: score the callee and rank, print the callee and its unchecked callers.
 ## Score
 
- 
+
 $$
 score = unchecked size - checked size + exceptionWeight
 $$
