@@ -96,7 +96,7 @@ public class NPEDetector {
 		Set<ScoreCallee> ret = new TreeSet<ScoreCallee>();
 		for (IMethod method : callGraph.getReturnNullMethods()) {
 			ScoreCallee scoreNode = new ScoreCallee(method, callGraph.getCheckSize(method),
-					callGraph.getUncheckSize(method));
+					callGraph.getUncheckSize(method), callGraph.isExceptionMethod(method));
 			ret.add(scoreNode);
 		}
 		return ret;

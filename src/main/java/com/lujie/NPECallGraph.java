@@ -39,6 +39,7 @@ public class NPECallGraph {
 	Set<MethodReference> returnNullMethodsref = HashSetFactory.make();
 	private Set<MethodReference> resourceCloseMethod = HashSetFactory.make();
 	Set<IMethod> transReturnNullMethods = HashSetFactory.make();
+	Set<IMethod> exceptionMethods = HashSetFactory.make();
 	private Map<MethodReference, Set<MethodReference>> caller2calleeRef = HashMapFactory.make();
 	private Map<MethodReference, Set<MethodReference>> callee2callerRef = HashMapFactory.make();
 	private Map<IMethod, Set<IMethod>> caller2callees = HashMapFactory.make();
@@ -187,6 +188,7 @@ public class NPECallGraph {
 			for (int i = 0; i < defIns.getNumberOfUses(); i++) {
 				use = defIns.getUse(i);
 				if (use != -1 && symbolTable.isNullConstant(use)) {
+					exceptionMethods.add(ir.getMethod());
 					return true;
 				}
 			}
@@ -415,5 +417,9 @@ public class NPECallGraph {
 			return Collections.emptySet();
 		}
 		return callee2uncheck.get(method);
+	}
+	
+	public boolean isExceptionMethod(IMethod method) {
+		return exceptionMethods.contains(method);
 	}
 }

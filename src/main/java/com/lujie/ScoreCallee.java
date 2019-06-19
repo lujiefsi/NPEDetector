@@ -6,9 +6,9 @@ public class ScoreCallee implements Comparable<ScoreCallee> {
 	public IMethod method = null;
 	public int score = 0;
 
-	public ScoreCallee(IMethod method, int checkSize, int uncheckSize) {
+	public ScoreCallee(IMethod method, int checkSize, int uncheckSize, boolean exception) {
 		this.method = method;
-		this.score = checkSize * 5 - uncheckSize;
+		this.score = checkSize * 5 - uncheckSize + (exception ? 1 : 0) * 10;
 	}
 
 	public int compareTo(ScoreCallee o) {
