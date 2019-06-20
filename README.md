@@ -7,38 +7,6 @@ The V1 version is in [master branch](https://github.com/lujiefsi/NPEDetector/tre
 # Analysis the source code
 Current version can only be used to analysis jar file. NPEDetector can also be implemented on [Abstract Syntax Tree(AST)](https://github.com/javaparser/javaparser), which can be used to analysis the source code(this is our futuer work).
 
-## Found and fixed bugs(total 26)
-   [CLOUDSTACK-10356](https://issues.apache.org/jira/browse/CLOUDSTACK-10356)(11)
-   [ZK-3006](https://issues.apache.org/jira/browse/ZOOKEEPER-3006)(1)
-   [ZK-3007](https://issues.apache.org/jira/browse/ZOOKEEPER-3007)(1)
-   [HBASE-20419](https://issues.apache.org/jira/browse/HBASE-20419)(2)
-   [YARN-8164](https://issues.apache.org/jira/browse/YARN-8164)(3)
-   [YARN-7786](https://issues.apache.org/jira/browse/YARN-7786)(1)
-   [STORM-3048](https://github.com/apache/storm/pull/2657)(3)
-   [ZK-3009](https://issues.apache.org/jira/browse/ZOOKEEPER-3009)(1)
-   [ZK-3009-3.4](https://issues.apache.org/jira/browse/ZOOKEEPER-3009)(3)
-
-## Found and confirmed bugs
-   [HELIX-701](https://github.com/apache/helix/pull/200)(2)
-   [ZK-3008](https://issues.apache.org/jira/browse/ZOOKEEPER-3008)(1)
-   [HBASE-20420](https://issues.apache.org/jira/browse/HBASE-20420)(8)
-   [HDFS-13451](https://issues.apache.org/jira/browse/HDFS-13451)(7)
-   [STORM-3049](https://github.com/apache/storm/pull/2656)(2)
-   [STORM-3051](https://github.com/apache/storm/pull/2656)(3)
-## Found and pending bugs
-   [HDFS-13452](https://issues.apache.org/jira/browse/HDFS-13452)(2)
-   [CASSANDRA-14385](https://issues.apache.org/jira/browse/CASSANDRA-14385)(3)
-   [ZK-3009](https://issues.apache.org/jira/browse/ZOOKEEPER-3009)(2)
-   [ZK-3010](https://issues.apache.org/jira/browse/ZOOKEEPER-3010)(2)
-   [ZK-3011](https://issues.apache.org/jira/browse/ZOOKEEPER-3011)(4)
-   [STORM-3050](https://github.com/apache/storm/pull/2655)(1)
-## False postive   
-   [HELIX-702](https://github.com/apache/helix/pull/201)(3)
-   [HBASE-20420](https://issues.apache.org/jira/browse/HBASE-20420)(1)
-   [CLOUDSTACK-10356](https://issues.apache.org/jira/browse/CLOUDSTACK-10356)(1)
-## Some great suggestions
-   [ZK-3009](https://issues.apache.org/jira/browse/ZOOKEEPER-3009)
-   [HDFS-13451](https://issues.apache.org/jira/browse/HDFS-13451)
 # Motivation
 <div  align="center">    
  <img src="https://github.com/lujiefsi/NPEDetector/blob/master/hbase-13546.png" width="60%" height="60%" alt="hbase-13546" align=center />
@@ -125,4 +93,36 @@ exception Weight is score when return null exists in exception handler.
 4. inputDir  is the jar files that need to be analyzed, outputFileNA is the file who store the method who may return null, outputFileNPE  is the file  who store NPE point.
 5. We use maven build our project, so you can use eclipse or other IDE import it as existed maven project. 
 
-> 
+# Result
+## Found and fixed bugs(total 26)
+   [CLOUDSTACK-10356](https://issues.apache.org/jira/browse/CLOUDSTACK-10356)(11)
+   [ZK-3006](https://issues.apache.org/jira/browse/ZOOKEEPER-3006)(1)
+   [ZK-3007](https://issues.apache.org/jira/browse/ZOOKEEPER-3007)(1)
+   [HBASE-20419](https://issues.apache.org/jira/browse/HBASE-20419)(2)
+   [YARN-8164](https://issues.apache.org/jira/browse/YARN-8164)(3)
+   [YARN-7786](https://issues.apache.org/jira/browse/YARN-7786)(1)
+   [STORM-3048](https://github.com/apache/storm/pull/2657)(3)
+   [ZK-3009](https://issues.apache.org/jira/browse/ZOOKEEPER-3009)(1)
+   [ZK-3009-3.4](https://issues.apache.org/jira/browse/ZOOKEEPER-3009)(3)
+
+## Found and confirmed bugs
+   [HELIX-701](https://github.com/apache/helix/pull/200)(2)
+   [ZK-3008](https://issues.apache.org/jira/browse/ZOOKEEPER-3008)(1)
+   [HBASE-20420](https://issues.apache.org/jira/browse/HBASE-20420)(8)
+   [HDFS-13451](https://issues.apache.org/jira/browse/HDFS-13451)(7)
+   [STORM-3049](https://github.com/apache/storm/pull/2656)(2)
+   [STORM-3051](https://github.com/apache/storm/pull/2656)(3)
+## Found and pending bugs
+   [HDFS-13452](https://issues.apache.org/jira/browse/HDFS-13452)(2)
+   [CASSANDRA-14385](https://issues.apache.org/jira/browse/CASSANDRA-14385)(3)
+   [ZK-3009](https://issues.apache.org/jira/browse/ZOOKEEPER-3009)(2)
+   [ZK-3010](https://issues.apache.org/jira/browse/ZOOKEEPER-3010)(2)
+   [ZK-3011](https://issues.apache.org/jira/browse/ZOOKEEPER-3011)(4)
+   [STORM-3050](https://github.com/apache/storm/pull/2655)(1)
+## False postive   
+   [HELIX-702](https://github.com/apache/helix/pull/201)(3)
+   [HBASE-20420](https://issues.apache.org/jira/browse/HBASE-20420)(1)
+   [CLOUDSTACK-10356](https://issues.apache.org/jira/browse/CLOUDSTACK-10356)(1)
+## Some great suggestions
+   [ZK-3009](https://issues.apache.org/jira/browse/ZOOKEEPER-3009)
+   [HDFS-13451](https://issues.apache.org/jira/browse/HDFS-13451)
