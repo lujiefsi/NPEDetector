@@ -101,10 +101,9 @@ In current version, we build call graph directly class hierarchy(CHA).
     step4: score the callee and rank, print the callee and its unchecked callers.
 ## Score
 
+<img src="http://www.forkosh.com/mathtex.cgi? \Large score = unchecked size - checked size + exceptionWeight">
 
-$$
-score = unchecked size - checked size + exceptionWeight
-$$
+
 unchecked size is the number of unchecked callers of RNM, checked size is the number of checked callers .
 
 exception Weight is score when return null exists in exception handler.
