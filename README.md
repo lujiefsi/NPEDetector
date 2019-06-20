@@ -84,7 +84,7 @@ NPEDetector will output two type result:
 2. NPE point who may throw null pointer exception, like "getMasterInfoPort#4"
 
 ## Warning 
-NPEDetector is designed for finding such simple NPEs, not systematically finding all NPEs. If you want the sound and precise NPE detector, you can visist anpther [NPEDetector](https://drona.csa.iisc.ac.in/~raghavan/software/NPE-VirtualBox/README.html)(same name with our tool). But I believe that it will take very long time to get the result for analysis hadoop. 
+NPEDetector is designed for finding such simple NPEs, not systematically finding all NPEs. If you want the sound and precise NPE detector, you can visist another [NPEDetector](https://drona.csa.iisc.ac.in/~raghavan/software/NPE-VirtualBox/README.html)(same name with our tool). But I believe that it will take very long time to get the result for analysis large system like hadoop. 
 
 
 
