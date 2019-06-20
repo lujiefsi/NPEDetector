@@ -4,7 +4,8 @@ NPEDetector is designed to find the potential null pointer exception in the syst
 # VS  NPEDetector -V1
 
 The V1 version is in [master branch](https://github.com/lujiefsi/NPEDetector/tree/master) , but it is too slow to analyses the large  system who has millions line code.  Current version perform the analysis on class hierarchy(CHA, not the WALA built-in CHACallGraph), which can be very fast to analysis the large system(about 5 minutes for hadoop who has about 2,470,000 lines code). Based on CHA, NPEDetector may not be very precise due do lack pointer analysis, but we can include more methods that invoke by reflection. 
-NPEDetector can also be implemented on [Abstract Syntax Tree(AST)](https://github.com/javaparser/javaparser), which can be used to analysis the source code while current version is used to analysis jar file.
+# Analysis the source code
+Current version can only be used to analysis jar file. NPEDetector can also be implemented on [Abstract Syntax Tree(AST)](https://github.com/javaparser/javaparser), which can be used to analysis the source code while.
 
 ## Found and fixed bugs(total 26)
    [CLOUDSTACK-10356](https://issues.apache.org/jira/browse/CLOUDSTACK-10356)(11)
