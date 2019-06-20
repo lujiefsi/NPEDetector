@@ -83,11 +83,8 @@ NPEDetector will output two type result:
 1. Nullable method who may return null method. Like "parse".
 2. NPE point who may throw null pointer exception, like "getMasterInfoPort#4"
 
-
-
-****
-
-<font face="微软雅黑" size=6 color=#FF0000 >NPEDetector  is designed for such simple case, not systematically finding all NPEs.</font>
+## Warning 
+NPEDetector is designed for finding such simple NPEs, not systematically finding all NPEs. If you want the sound and precise NPE detector, you can visist anpther [NPEDetector](https://drona.csa.iisc.ac.in/~raghavan/software/NPE-VirtualBox/README.html)(same name with our tool). But I believe that it will take very long time to get the result for analysis hadoop. 
 
 
 
