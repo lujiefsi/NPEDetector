@@ -89,8 +89,8 @@ exception Weight is score when return null exists in exception handler.
 # Usage
 1. Download the project
 2. Using  "mvn clean compile assembly:single" to generate a runnable jar in target directory.
-3. use command "java -jar ./target/NPEDectetor-1.0-SNAPSHOT-jar-with-dependencies.jar -inputDir /home/lujie/tmp -outputFileNA /tmp/Result_NA -outputFileNPE /tmp/Result_NPE" to analysis
-4. inputDir  is the jar files that need to be analyzed, outputFileNA is the file who store the method who may return null, outputFileNPE  is the file  who store NPE point.
+3. use command "java -jar ./target/NPEDectetor-1.0-SNAPSHOT-jar-with-dependencies.jar -system hbase -topN 10 -inputDir /tmp/input/ -outputFileNA /tmp/Result_NA -outputFileNPE /tmp/Result_NPE"
+4. -system  is the system that we will analysis, we will use its value to filter the class;  -topN means only print top n result;inputDir  is the jar files that need to be analyzed, outputFileNA is the file who store the method who may return null, outputFileNPE  is the file  who store NPE point.
 5. We use maven build our project, so you can use eclipse or other IDE import it as existed maven project. 
 
 # Result
