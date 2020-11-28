@@ -33,6 +33,8 @@ import com.ibm.wala.util.io.FileUtil;
  * */
 public class NPEDetector {
 	private String inputDir = null;
+	private int topN = -1;
+	private String systemName="";
 	private NPECallGraph callGraph = null;
 	AnalysisCache analysisCache = new AnalysisCacheImpl();
 	private String outputFileNA = null;
@@ -55,14 +57,25 @@ public class NPEDetector {
 		try {
 			writerNullable = new FileWriter(fileNullable);
 			writerNPE = new FileWriter(fileNPE);
+			int size = topN==-1?scoreNodes.size():topN;
 			for (ScoreCallee scoreNode : scoreNodes) {
 				writerNullable.write(scoreNode.method + "\n");
 				if (callGraph.getUncheckCallers(scoreNode.method).isEmpty()) {
 					continue;
 				}
+				if (--size<0) {
+					break;
+				}
 				StringBuilder sb = new StringBuilder();
-				sb.append(scoreNode.method);
+				sb.append("--------------------------------\n");
+				sb.append("Nullable method:" + scoreNode.method);
+				sb.append("\nuncheck caller: ");
 				for (CallerWLN caller : callGraph.getUncheckCallers(scoreNode.method)) {
+					sb.append(" ");
+					sb.append(Util.getSimpleMethodToString(caller.method) + "#" + caller.linenumber);
+				}
+				sb.append("\nchecked caller:");
+				for (CallerWLN caller : callGraph.getCheckCaller(scoreNode.method)) {
 					sb.append(" ");
 					sb.append(Util.getSimpleMethodToString(caller.method) + "#" + caller.linenumber);
 				}
@@ -107,6 +120,8 @@ public class NPEDetector {
 		options.addOption("inputDir", true, "the directory including the jars that are test ");
 		options.addOption("outputFileNA", true, "the file where the result output");
 		options.addOption("outputFileNPE", true, "the file where the result output");
+		options.addOption("system", true, "the name of system  that will be analysis");
+		options.addOption("topN", true, "print top N result");
 		CommandLineParser parser = new DefaultParser();
 		CommandLine cmd = parser.parse(options, args);
 		if (cmd.hasOption("inputDir")) {
@@ -127,6 +142,12 @@ public class NPEDetector {
 		if (outputFileNPE == null) {
 			Util.exitWithErrorMessage("you should specify output file for potential Null Pointer Exception");
 		}
+		if (cmd.hasOption("system")) {
+			systemName = cmd.getOptionValue("system");
+		}
+		if (cmd.hasOption("topN")) {
+			topN = Integer.valueOf(cmd.getOptionValue("topN"));
+		}
 	}
 
 	private void makeCallGraph()
@@ -139,7 +160,7 @@ public class NPEDetector {
 		AnalysisScope scope = AnalysisScopeReader.makeJavaBinaryAnalysisScope(jarFiles, exclusionsFile);
 		cha = ClassHierarchyFactory.make(scope);
 		callGraph = new NPECallGraph(cha, true);
-		callGraph.init();
+		callGraph.init(systemName);
 		System.out.println("Time spent ont building call graph " + (System.currentTimeMillis() - start_time) + "ms");
 	}
 

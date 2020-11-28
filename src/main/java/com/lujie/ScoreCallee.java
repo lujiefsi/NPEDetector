@@ -4,19 +4,19 @@ import com.ibm.wala.classLoader.IMethod;
 
 public class ScoreCallee implements Comparable<ScoreCallee> {
 	public IMethod method = null;
-	public int score = 0;
+	public double score = 0;
 
 	public ScoreCallee(IMethod method, int checkSize, int uncheckSize, boolean exception) {
 		this.method = method;
-		this.score = checkSize * 5 - uncheckSize + (exception ? 1 : 0) * 10;
+		this.score = uncheckSize/(checkSize==0?0.1:1.0*checkSize) ;
 	}
 
 	public int compareTo(ScoreCallee o) {
 		if (o.score - this.score > 0) {
-			return 1;
+			return -1;
 		}
 		if (o.score - this.score < 0) {
-			return -1;
+			return 1;
 		}
 		return this.toString().compareTo(o.toString());
 	}

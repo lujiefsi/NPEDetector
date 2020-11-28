@@ -44,7 +44,7 @@ public class NPECallGraph {
 	private Map<MethodReference, Set<MethodReference>> callee2callerRef = HashMapFactory.make();
 	private Map<IMethod, Set<IMethod>> caller2callees = HashMapFactory.make();
 	private Map<IMethod, Set<IMethod>> callee2callers = HashMapFactory.make();
-	private Map<IMethod, Set<IMethod>> callee2check = HashMapFactory.make();
+	private Map<IMethod, Set<CallerWLN>> callee2check = HashMapFactory.make();
 	private Map<IMethod, Set<CallerWLN>> callee2uncheck = HashMapFactory.make();
 	private Map<MethodReference, IMethod> ref2method = HashMapFactory.make();
 
@@ -53,23 +53,25 @@ public class NPECallGraph {
 		this.cache = new AnalysisCacheImpl();
 	}
 
-	public void init() {
-		visistAllMethods();
+	public void init(String systemname) {
+		visistAllMethods(systemname);
 		buildCheckGraph();
 		filterChecker();
 	}
 
 	private void filterChecker() {
-		for (Entry<IMethod, Set<IMethod>> checkEntry : callee2check.entrySet()) {
+		for (Entry<IMethod, Set<CallerWLN>> checkEntry : callee2check.entrySet()) {
 			Set<CallerWLN> uncheckCallers = callee2uncheck.get(checkEntry.getKey());
 			if (uncheckCallers == null) {
 				continue;
 			}
 			Set<CallerWLN> removedCallers = HashSetFactory.make();
 			Set<IMethod> checkedCallers = HashSetFactory.make();
-			checkedCallers.addAll(checkEntry.getValue());
-			for (IMethod checkedCaller : checkEntry.getValue()) {
-				checkedCallers.addAll(getPreNodes(checkedCaller, 1, 1));
+			for (CallerWLN checkedCaller : checkEntry.getValue()) {
+				checkedCallers.add(checkedCaller.method);
+			}
+			for (CallerWLN checkedCaller : checkEntry.getValue()) {
+				checkedCallers.addAll(getPreNodes(checkedCaller.method, 1, 1));
 
 			}
 			for (CallerWLN uncheckCaller : uncheckCallers) {
@@ -110,9 +112,10 @@ public class NPECallGraph {
 		returnNullMethods.removeAll(transReturnNullMethods);
 	}
 
-	private void visistAllMethods() {
+	private void visistAllMethods(String systemname) {
 		for (IClass iclass : cha) {
-			if (iclass.toString().contains("shaded")) {
+			if (iclass.toString().contains("shaded") || iclass.toString().contains("thirdparty")
+					|| !iclass.toString().toLowerCase().contains(systemname.toLowerCase())) {
 				/* shaded or test jar should not be include */
 				continue;
 			}
@@ -151,7 +154,7 @@ public class NPECallGraph {
 						if (Util.isApplicationMethod(target)) {
 							// may add the transReturnNullMethod, so we need remove them
 							// in visistAllMethods
-							if(ir.getBasicBlockForInstruction(ins).isCatchBlock()){
+							if (ir.getBasicBlockForInstruction(ins).isCatchBlock()) {
 								resourceCloseMethod.add(target);
 							}
 							returnNullMethodsref.add(target);
@@ -237,7 +240,7 @@ public class NPECallGraph {
 						Iterator<SSAInstruction> useIterator = du.getUses(def);
 						if (useIterator.hasNext()) {
 							SSAInstruction useIns = useIterator.next();
-							if (useIns instanceof SSACheckCastInstruction) {
+							if (useIns instanceof SSACheckCastInstruction || useIns instanceof SSAPhiInstruction) {
 								def = useIns.getDef();
 							}
 						}
@@ -254,8 +257,19 @@ public class NPECallGraph {
 								 * cause NPE. SO TODO sound this implements.
 								 */
 								if (isNEChecker(ir, (SSAConditionalBranchInstruction) useInstruction, def)) {
-									MapUtil.findOrCreateSet(callee2check, rootCallee).add(caller);
+									CallerWLN callerWLN = new CallerWLN();
+									callerWLN.linenumber = Util.getLineNumber(ir, instruction);
+									callerWLN.method = caller;
+									MapUtil.findOrCreateSet(callee2check, rootCallee).add(callerWLN);
 								}
+							} else if (useInstruction instanceof SSAAbstractInvokeInstruction
+									&& ((SSAAbstractInvokeInstruction) useInstruction).getDeclaredTarget().getName()
+											.toString().equals("isEmpty")) {
+								CallerWLN callerWLN = new CallerWLN();
+								callerWLN.linenumber = Util.getLineNumber(ir, instruction);
+								callerWLN.method = caller;
+								MapUtil.findOrCreateSet(callee2check, rootCallee).add(callerWLN);
+								continue;
 							} else if (useInstruction instanceof SSAAbstractInvokeInstruction && !isUsedInInvoke(ir,
 									(SSAAbstractInvokeInstruction) useInstruction, def, new HashSet<IMethod>())) {
 								continue;
@@ -403,8 +417,16 @@ public class NPECallGraph {
 	}
 
 	public int getCheckSize(IMethod method) {
-		Set<IMethod> checkmethod = callee2check.get(method);
+		Set<CallerWLN> checkmethod = callee2check.get(method);
 		return checkmethod == null ? 0 : checkmethod.size();
+	}
+
+	public Set<CallerWLN> getCheckCaller(IMethod method) {
+		Set<CallerWLN> checkmethod = callee2check.get(method);
+		if (checkmethod == null) {
+			return Collections.emptySet();
+		}
+		return checkmethod;
 	}
 
 	public Set<IMethod> getReturnNullMethods() {
@@ -418,7 +440,7 @@ public class NPECallGraph {
 		}
 		return callee2uncheck.get(method);
 	}
-	
+
 	public boolean isExceptionMethod(IMethod method) {
 		return exceptionMethods.contains(method);
 	}
