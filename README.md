@@ -94,7 +94,7 @@ exception Weight is score when return null exists in exception handler.
 5. We use maven build our project, so you can use eclipse or other IDE import it as existed maven project. 
 
 # Result
-## Found and fixed bugs(total 26)
+## Found and fixed bugs(total 27)
    [CLOUDSTACK-10356](https://issues.apache.org/jira/browse/CLOUDSTACK-10356)(11)
    [ZK-3006](https://issues.apache.org/jira/browse/ZOOKEEPER-3006)(1)
    [ZK-3007](https://issues.apache.org/jira/browse/ZOOKEEPER-3007)(1)
