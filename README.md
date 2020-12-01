@@ -104,7 +104,7 @@ exception Weight is score when return null exists in exception handler.
    [STORM-3048](https://github.com/apache/storm/pull/2657)(3)
    [ZK-3009](https://issues.apache.org/jira/browse/ZOOKEEPER-3009)(1)
    [ZK-3009-3.4](https://issues.apache.org/jira/browse/ZOOKEEPER-3009)(3)
-
+   [HBASE-25332](https://issues.apache.org/jira/browse/HBASE-25332)
 ## Found and confirmed bugs
    [HELIX-701](https://github.com/apache/helix/pull/200)(2)
    [ZK-3008](https://issues.apache.org/jira/browse/ZOOKEEPER-3008)(1)
